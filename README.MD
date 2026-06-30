@@ -1,8 +1,4 @@
-Good. So you have a private repo with the working code.
 
-Now document it. Create a `README.md` in the root of the repo:
-
-```markdown
 # GramPay MCP Server
 
 A Model Context Protocol (MCP) server for AI-powered crypto-to-Naira cash-outs on Solana.
