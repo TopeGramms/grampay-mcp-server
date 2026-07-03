@@ -73,4 +73,42 @@ export const TOOLS = [
       required: ["tx_id"],
     },
   },
+  {
+    name: "check_balance",
+    description: "Check available balance across all currencies (NGN, KES, etc.)",
+    inputSchema: {
+      type: "object",
+      properties: {},
+      required: [],
+    },
+  },
+  {
+    name: "cashout_to_ngn",
+    description: "Initiate a bank payout in NGN. Accepts amount (NGN) or amount_usd for automatic USD→NGN conversion.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        amount: { type: "number", description: "Amount in NGN" },
+        amount_usd: { type: "number", description: "Amount in USD to convert to NGN" },
+        exchange_rate: { type: "number", description: "Optional USD→NGN rate, defaults to env value" },
+        recipientName: { type: "string", description: "Bank account holder name" },
+        accountNumber: { type: "string", description: "Bank account number" },
+        bankCode: { type: "string", description: "Bank code (e.g. 007 for GTBank)" },
+        reference: { type: "string", description: "Unique transaction reference" },
+        narration: { type: "string", description: "Optional payment description" },
+      },
+      required: ["recipientName", "accountNumber", "bankCode", "reference"],
+    },
+  },
+  {
+    name: "check_transfer_status",
+    description: "Check the status of a crypto-to-NGN transfer",
+    inputSchema: {
+      type: "object",
+      properties: {
+        reference: { type: "string", description: "Transaction reference from cashout_to_ngn" },
+      },
+      required: ["reference"],
+    },
+  },
 ];

@@ -4,6 +4,11 @@ import { CallToolRequestSchema, ListToolsRequestSchema, type TextContent } from 
 import { CONFIG } from "./config.js";
 import { TOOLS } from "./tools/index.js";
 import * as handlers from "./tools/handlers.js";
+import {
+  cashoutToNGN,
+  checkBalance,
+  checkTransferStatus,
+} from "./ivoryPayMcpTools.js";
 
 const server = new Server(
   {
@@ -55,6 +60,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         break;
       case "grampay_get_status":
         result = await handlers.handleGetStatus(args.tx_id as string);
+        break;
+      case "check_balance":
+        result = await checkBalance();
+        break;
+      case "cashout_to_ngn":
+        result = await cashoutToNGN(args as Record<string, unknown>);
+        break;
+      case "check_transfer_status":
+        result = await checkTransferStatus(args as { reference: string });
         break;
       default:
         throw new Error(`Unknown tool: ${name}`);
