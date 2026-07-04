@@ -10,7 +10,8 @@ const mockState = {
 export async function handleGetConfig() {
   return {
     mode: CONFIG.MODE,
-    opay_account: "****" + CONFIG.OPAY_ACCOUNT.slice(-4), // Masked
+    default_bank_name: CONFIG.DEFAULT_BANK_NAME,
+    default_bank_account: "****" + CONFIG.DEFAULT_BANK_ACCOUNT.slice(-4), // Masked
     max_cashout_usd: CONFIG.MAX_CASHOUT_USD,
     rate_usd_to_ngn: 1640, // Mock rate
   };
@@ -66,7 +67,8 @@ export async function handlePrepareCashout(amountUsd: number) {
   mockState.pending_tokens.set(token, {
     amount_usd: amountUsd,
     amount_ngn: amountUsd * 1640,
-    opay_account: CONFIG.OPAY_ACCOUNT,
+    bank_name: CONFIG.DEFAULT_BANK_NAME,
+    bank_account: CONFIG.DEFAULT_BANK_ACCOUNT,
     timestamp: new Date().toISOString(),
     expires_at: new Date(Date.now() + 300000).toISOString(), // 5 min expiry
   });
@@ -77,7 +79,7 @@ export async function handlePrepareCashout(amountUsd: number) {
       amount_usd: amountUsd,
       amount_ngn: amountUsd * 1640,
       rate: 1640,
-      destination: "Opay ****" + CONFIG.OPAY_ACCOUNT.slice(-4),
+      destination: `${CONFIG.DEFAULT_BANK_NAME} ****${CONFIG.DEFAULT_BANK_ACCOUNT.slice(-4)}`,
       status: "READY_FOR_CONFIRMATION",
     },
     message: "[MOCK] Preparation successful. Use token to execute.",
@@ -103,7 +105,7 @@ export async function handleExecuteCashout(prepareToken: string) {
   mockState.completed_txs.set(txId, {
     amount_usd: prep.amount_usd,
     amount_ngn: prep.amount_ngn,
-    destination: prep.opay_account,
+    destination: `${prep.bank_name} ****${String(prep.bank_account).slice(-4)}`,
     timestamp: new Date().toISOString(),
     status: "COMPLETED",
   });
@@ -120,7 +122,7 @@ export async function handleExecuteCashout(prepareToken: string) {
     details: {
       amount_usd: prep.amount_usd,
       amount_ngn: prep.amount_ngn,
-      destination: "Opay ****" + CONFIG.OPAY_ACCOUNT.slice(-4),
+      destination: `${prep.bank_name} ****${String(prep.bank_account).slice(-4)}`,
       timestamp: new Date().toISOString(),
     },
     message: "[MOCK] ✅ Cash-out simulated successfully",

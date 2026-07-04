@@ -4,9 +4,42 @@ export declare const TOOLS: ({
     inputSchema: {
         type: string;
         properties: {
+            query?: never;
             amount_usd?: never;
             prepare_token?: never;
             tx_id?: never;
+            amount?: never;
+            exchange_rate?: never;
+            recipientName?: never;
+            accountNumber?: never;
+            bankCode?: never;
+            bankName?: never;
+            reference?: never;
+            narration?: never;
+        };
+        required: never[];
+    };
+} | {
+    name: string;
+    description: string;
+    inputSchema: {
+        type: string;
+        properties: {
+            query: {
+                type: string;
+                description: string;
+            };
+            amount_usd?: never;
+            prepare_token?: never;
+            tx_id?: never;
+            amount?: never;
+            exchange_rate?: never;
+            recipientName?: never;
+            accountNumber?: never;
+            bankCode?: never;
+            bankName?: never;
+            reference?: never;
+            narration?: never;
         };
         required: never[];
     };
@@ -20,8 +53,17 @@ export declare const TOOLS: ({
                 type: string;
                 description: string;
             };
+            query?: never;
             prepare_token?: never;
             tx_id?: never;
+            amount?: never;
+            exchange_rate?: never;
+            recipientName?: never;
+            accountNumber?: never;
+            bankCode?: never;
+            bankName?: never;
+            reference?: never;
+            narration?: never;
         };
         required: string[];
     };
@@ -35,8 +77,17 @@ export declare const TOOLS: ({
                 type: string;
                 description: string;
             };
+            query?: never;
             amount_usd?: never;
             tx_id?: never;
+            amount?: never;
+            exchange_rate?: never;
+            recipientName?: never;
+            accountNumber?: never;
+            bankCode?: never;
+            bankName?: never;
+            reference?: never;
+            narration?: never;
         };
         required: string[];
     };
@@ -50,8 +101,89 @@ export declare const TOOLS: ({
                 type: string;
                 description: string;
             };
+            query?: never;
             amount_usd?: never;
             prepare_token?: never;
+            amount?: never;
+            exchange_rate?: never;
+            recipientName?: never;
+            accountNumber?: never;
+            bankCode?: never;
+            bankName?: never;
+            reference?: never;
+            narration?: never;
+        };
+        required: string[];
+    };
+} | {
+    name: string;
+    description: string;
+    inputSchema: {
+        type: string;
+        properties: {
+            amount: {
+                type: string;
+                description: string;
+            };
+            amount_usd: {
+                type: string;
+                description: string;
+            };
+            exchange_rate: {
+                type: string;
+                description: string;
+            };
+            recipientName: {
+                type: string;
+                description: string;
+            };
+            accountNumber: {
+                type: string;
+                description: string;
+            };
+            bankCode: {
+                type: string;
+                description: string;
+            };
+            bankName: {
+                type: string;
+                description: string;
+            };
+            reference: {
+                type: string;
+                description: string;
+            };
+            narration: {
+                type: string;
+                description: string;
+            };
+            query?: never;
+            prepare_token?: never;
+            tx_id?: never;
+        };
+        required: string[];
+    };
+} | {
+    name: string;
+    description: string;
+    inputSchema: {
+        type: string;
+        properties: {
+            reference: {
+                type: string;
+                description: string;
+            };
+            query?: never;
+            amount_usd?: never;
+            prepare_token?: never;
+            tx_id?: never;
+            amount?: never;
+            exchange_rate?: never;
+            recipientName?: never;
+            accountNumber?: never;
+            bankCode?: never;
+            bankName?: never;
+            narration?: never;
         };
         required: string[];
     };

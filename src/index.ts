@@ -8,6 +8,7 @@ import {
   cashoutToNGN,
   checkBalance,
   checkTransferStatus,
+  lookupBank,
 } from "./ivoryPayMcpTools.js";
 
 const server = new Server(
@@ -64,6 +65,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case "check_balance":
         result = await checkBalance();
         break;
+      case "grampay_lookup_bank":
+        result = await lookupBank(args as Record<string, unknown>);
+        break;
       case "cashout_to_ngn":
         result = await cashoutToNGN(args as Record<string, unknown>);
         break;
@@ -72,6 +76,18 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         break;
       default:
         throw new Error(`Unknown tool: ${name}`);
+    }
+
+    if (
+      result &&
+      typeof result === "object" &&
+      "content" in result &&
+      Array.isArray((result as { content?: unknown }).content)
+    ) {
+      return result as {
+        content: TextContent[];
+        isError?: boolean;
+      };
     }
 
     return {

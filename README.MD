@@ -1,11 +1,10 @@
-
 # GramPay MCP Server
 
-A Model Context Protocol (MCP) server for AI-powered crypto-to-Naira cash-outs on Solana.
+A Model Context Protocol (MCP) server for bank payouts from USDC to Nigerian Naira.
 
 ## Overview
 
-GramPay is a personal AI payment agent that converts USDC to Nigerian Naira via Claude/Cursor/ChatGPT using MCP tools. Users ask their AI assistant to cash out, and the AI handles the swap + off-ramp automatically.
+GramPay is a personal AI payment agent that converts USDC to Nigerian Naira via Claude, Cursor, or ChatGPT using MCP tools. Users ask their AI assistant to cash out, and the assistant handles bank lookup, validation, and payout preparation.
 
 **Current Phase:** Phase 0 (Mock mode)
 
@@ -30,7 +29,7 @@ npm run build
 npm run dev
 ```
 
-The server starts in stdio mode (ready for MCP clients like Claude Desktop or VS Code).
+The server starts in stdio mode, ready for MCP clients like Claude Desktop or VS Code.
 
 ### VS Code Setup
 
@@ -51,60 +50,49 @@ Add to `.vscode/settings.json`:
 ```
 
 Restart VS Code, then ask Claude in chat:
+
 > "Call grampay_get_config"
 
 ## MCP Tools
 
 | Tool | Purpose |
 |------|---------|
-| `grampay_get_config` | Get current mode, limits, Opay account (masked) |
+| `grampay_get_config` | Get current mode, limits, and default bank details |
 | `grampay_get_balance` | Check USDC balance in wallet |
-| `grampay_get_quote` | Get live USDC → NGN conversion rate |
+| `grampay_lookup_bank` | Search supported real banks and get their codes |
+| `grampay_get_quote` | Get live USDC -> NGN conversion rate |
 | `grampay_prepare_cashout` | Validate amount, return confirmation token |
 | `grampay_execute_cashout` | Execute cash-out (requires prepare token) |
 | `grampay_get_status` | Check transaction status |
+| `cashout_to_ngn` | Prepare a bank payout to a real Nigerian bank account |
+| `check_transfer_status` | Check the status of a crypto-to-NGN transfer |
 
 ## Example Usage
 
 In Claude/Cursor chat:
-```
-"Cash out $50 USDC to my Opay account"
+
+```text
+Cash out 20000 NGN to Access Bank account 0785351096
 ```
 
 Claude will:
-1. Call `grampay_get_quote` → Get rate
-2. Call `grampay_prepare_cashout` → Validate & prepare
-3. Call `grampay_execute_cashout` → Execute (with your confirmation)
-4. Return receipt with NGN amount and Opay destination
 
-## Architecture
-
-```
-Claude/Cursor Chat
-    ↓
-MCP Server (stdio)
-    ↓
-Mock handlers (Phase 0) / Real handlers (Phase 1+)
-    ↓
-Mock state (Phase 0) / Jupiter + Bitnob API (Phase 1+)
-```
-
-## Project Phases
-
-- **Phase 0** (Current): Mock mode, flow validation ✅
-- **Phase 1**: Bitnob sandbox + real Solana wallet
-- **Phase 2**: Live testing ($5-10 amounts)
-- **Phase 3**: Compliance + pre-seed prep
-- **Phase 4**: Funding + scale
+1. Call `grampay_lookup_bank` to resolve Access Bank
+2. Call `cashout_to_ngn` to validate and prepare the payout
+3. Return a receipt with the NGN amount and destination bank account
 
 ## Configuration
 
 Environment variables (in `.env`):
-```
-GRAMPAY_MODE=mock          # mock or live
-BITNOB_API_KEY=            # Phase 1+
-SOLANA_PRIVATE_KEY=        # Phase 1+
-JUPITER_API_KEY=           # Phase 1+
+
+```bash
+GRAMPAY_MODE=mock
+GRAMPAY_DEFAULT_BANK_NAME=Access Bank
+GRAMPAY_DEFAULT_BANK_ACCOUNT=0785351096
+GRAMPAY_MAX_CASHOUT_USD=1000
+USD_TO_NGN_RATE=1650
+IVORYPAY_SECRET_KEY=
+IVORYPAY_ENV=test
 ```
 
 ## Security Notes
@@ -116,25 +104,14 @@ JUPITER_API_KEY=           # Phase 1+
 ## Development
 
 ```bash
-npm run build    # Compile TypeScript
-npm run dev      # Build + run
+npm run build
+npm run dev
 ```
-
-## License
-
-Private (personal project)
 
 ## Next Steps
 
 - [ ] Push to GitHub (private repo)
-- [ ] Document this README ✅
-- [ ] Phase 1: Integrate Bitnob API (sandbox)
+- [ ] Phase 1: Integrate IvoryPay API in live mode
 - [ ] Phase 1: Connect real Solana wallet
-- [ ] Phase 1: Test with small amounts ($5)
+- [ ] Phase 1: Test with small amounts
 
----
-
-Built with MCP, Solana, and Claude.
-```
-
----

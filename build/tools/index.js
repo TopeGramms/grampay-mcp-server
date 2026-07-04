@@ -18,8 +18,22 @@ export const TOOLS = [
         },
     },
     {
+        name: "grampay_lookup_bank",
+        description: "Search the supported real-bank directory and return matching bank names and codes",
+        inputSchema: {
+            type: "object",
+            properties: {
+                query: {
+                    type: "string",
+                    description: "Bank name or code to search for, such as Access Bank or 044",
+                },
+            },
+            required: [],
+        },
+    },
+    {
         name: "grampay_get_quote",
-        description: "Get live USDC → NGN rate quote",
+        description: "Get live USDC -> NGN rate quote",
         inputSchema: {
             type: "object",
             properties: {
@@ -71,6 +85,45 @@ export const TOOLS = [
                 },
             },
             required: ["tx_id"],
+        },
+    },
+    {
+        name: "check_balance",
+        description: "Check available balance across all currencies (NGN, KES, etc.)",
+        inputSchema: {
+            type: "object",
+            properties: {},
+            required: [],
+        },
+    },
+    {
+        name: "cashout_to_ngn",
+        description: "Initiate a bank payout in NGN to a real bank account. Accepts amount (NGN) or amount_usd for automatic USD -> NGN conversion.",
+        inputSchema: {
+            type: "object",
+            properties: {
+                amount: { type: "number", description: "Amount in NGN" },
+                amount_usd: { type: "number", description: "Amount in USD to convert to NGN" },
+                exchange_rate: { type: "number", description: "Optional USD -> NGN rate, defaults to env value" },
+                recipientName: { type: "string", description: "Bank account holder name" },
+                accountNumber: { type: "string", description: "Bank account number" },
+                bankCode: { type: "string", description: "Bank code (optional if bankName is provided)" },
+                bankName: { type: "string", description: "Bank name such as Access Bank or First Bank" },
+                reference: { type: "string", description: "Unique transaction reference" },
+                narration: { type: "string", description: "Optional payment description" },
+            },
+            required: ["accountNumber", "reference"],
+        },
+    },
+    {
+        name: "check_transfer_status",
+        description: "Check the status of a crypto-to-NGN transfer",
+        inputSchema: {
+            type: "object",
+            properties: {
+                reference: { type: "string", description: "Transaction reference from cashout_to_ngn" },
+            },
+            required: ["reference"],
         },
     },
 ];

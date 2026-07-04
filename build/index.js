@@ -4,6 +4,7 @@ import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprot
 import { CONFIG } from "./config.js";
 import { TOOLS } from "./tools/index.js";
 import * as handlers from "./tools/handlers.js";
+import { cashoutToNGN, checkBalance, checkTransferStatus, lookupBank, } from "./ivoryPayMcpTools.js";
 const server = new Server({
     name: "grampay-mcp-server",
     version: "0.1.0",
@@ -44,8 +45,26 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             case "grampay_get_status":
                 result = await handlers.handleGetStatus(args.tx_id);
                 break;
+            case "check_balance":
+                result = await checkBalance();
+                break;
+            case "grampay_lookup_bank":
+                result = await lookupBank(args);
+                break;
+            case "cashout_to_ngn":
+                result = await cashoutToNGN(args);
+                break;
+            case "check_transfer_status":
+                result = await checkTransferStatus(args);
+                break;
             default:
                 throw new Error(`Unknown tool: ${name}`);
+        }
+        if (result &&
+            typeof result === "object" &&
+            "content" in result &&
+            Array.isArray(result.content)) {
+            return result;
         }
         return {
             content: [

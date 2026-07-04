@@ -1,6 +1,7 @@
 export declare function handleGetConfig(): Promise<{
     mode: string;
-    opay_account: string;
+    default_bank_name: string;
+    default_bank_account: string;
     max_cashout_usd: number;
     rate_usd_to_ngn: number;
 }>;

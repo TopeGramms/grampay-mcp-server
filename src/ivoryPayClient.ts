@@ -28,14 +28,11 @@ export class IvoryPayApiError extends Error {
 
 function loadSecretKey(): string {
   const key = process.env.IVORYPAY_SECRET_KEY;
-  if (!key) {
-    throw new Error("Missing IVORYPAY_SECRET_KEY. Set it in your .env file.");
-  }
-  return key;
+  return key ?? "";
 }
 
 export class IvoryPayClient {
-  private secretKey: string;
+  private secretKey?: string;
   private env: string;
 
   constructor(secretKey?: string, env?: string) {
@@ -44,6 +41,10 @@ export class IvoryPayClient {
   }
 
   private headers(): HeadersInit {
+    if (!this.secretKey) {
+      throw new Error("Missing IVORYPAY_SECRET_KEY. Set it in your .env file.");
+    }
+
     return {
       Authorization: this.secretKey,
       "Content-Type": "application/json",
@@ -134,6 +135,7 @@ export interface InitiateNGNTransferParams {
   recipientName: string;
   accountNumber: string;
   bankCode: string;
+  bankName?: string;
   reference: string;
   narration?: string;
 }
