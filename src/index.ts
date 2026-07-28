@@ -9,6 +9,7 @@ import {
   checkBalance,
   checkTransferStatus,
   lookupBank,
+  listSupportedBanks,
 } from "./ivoryPayMcpTools.js";
 
 const server = new Server(
@@ -67,6 +68,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         break;
       case "grampay_lookup_bank":
         result = await lookupBank(args as Record<string, unknown>);
+        break;
+      case "list_supported_banks":
+        result = await listSupportedBanks();
         break;
       case "cashout_to_ngn":
         result = await cashoutToNGN(args as Record<string, unknown>);

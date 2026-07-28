@@ -17,15 +17,21 @@ async function main() {
   await client.connect(transport);
   const tools = await client.listTools();
   console.log('Tools:', tools.tools.map((t) => t.name));
+
+  const supportedBanks = await client.callTool({
+    name: 'list_supported_banks',
+    arguments: { country: 'NG' },
+  });
+  console.log('Supported banks:', JSON.stringify(supportedBanks, null, 2));
+
   const bankResult = await client.callTool({
     name: 'cashout_to_ngn',
     arguments: {
       amount_usd: 1,
-      recipientName: 'Test Recipient',
-      accountNumber: '0785351096',
-      bankCode: '000014',
+      firstName: 'Adekalu',
+      lastName: 'Temitope',
+      email: 'hardekhalu@gmail.com',
       reference: `ivorypay-test-${Date.now()}`,
-      narration: 'MCP test transfer',
     },
   });
   console.log('Bank payout result:', JSON.stringify(bankResult, null, 2));

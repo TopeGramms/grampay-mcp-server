@@ -76,43 +76,73 @@ export class IvoryPayClient {
     return (payload as IvoryPaySuccessResponse<T>).data ?? (payload as T);
   }
 
-  async getBalance() {
-    return this.request<BalanceResponse>("GET", "/fiat-transfer/banks");
+  async createTransaction(params: CreateTransactionParams): Promise<TransactionResponse> {
+    return this.request<TransactionResponse>("POST", "/transactions", {
+      amount: params.amount,
+      email: params.email,
+      firstName: params.firstName,
+      lastName: params.lastName,
+      type: "FIAT",
+      baseFiat: params.baseFiat ?? "NGN",
+      reference: params.reference,
+    });
+  }
+
+  async simulatePayment(reference: string): Promise<{ status: string }> {
+    return this.request<{ status: string }>("POST", "/fiat-transfer/simulate", {
+      reference,
+    });
+  }
+
+  async verifyTransaction(reference: string): Promise<TransactionVerifyResponse> {
+    return this.request<TransactionVerifyResponse>("GET", `/business/transactions/${encodeURIComponent(reference)}/verify`);
+  }
+
+  async getBalance(fiatCurrency: "USD" | "NGN" | "KES" | "GHS" | "ZAR" = "NGN"): Promise<BalanceResponse> {
+    return this.request<BalanceResponse>(
+      "GET",
+      `/balance?fiatCurrency=${fiatCurrency}`
+    );
   }
 
   async listBanks() {
     return this.request<BankListEntry[]>("GET", "/fiat-transfer/banks");
   }
+}
 
-  async resolveBankAccount(accountNumber: string, bankCode: string, currency: "NGN" | "KES" | "GHS" | "ZAR" | "USD" = "NGN") {
-    return this.request<AccountResolution>("POST", "/fiat-transfer/account-resolution", {
-      accountNumber,
-      bankCode,
-      currency,
-    });
-  }
+export interface CreateTransactionParams {
+  amount: number;
+  email: string;
+  firstName: string;
+  lastName: string;
+  baseFiat?: "NGN" | "USD" | "KES" | "GHS" | "ZAR";
+  reference: string;
+}
 
-  async initiateNGNTransfer(params: InitiateNGNTransferParams) {
-    return this.request<TransferResponse>("POST", "/fiat-transfer", {
-      amount: params.amount,
-      token: "USDT",
-      fiatCurrency: params.currency ?? "NGN",
-      payoutMethod: "BANK_TRANSFER",
-      accountNumber: params.accountNumber,
-      bankCode: params.bankCode,
-      reference: params.reference,
-    });
-  }
+export interface TransactionResponse {
+  reference: string;
+  amount: number;
+  type: string;
+  status?: string;
+  message?: string;
+}
 
-  async getTransaction(reference: string) {
-    return this.request<TransactionDetail>("GET", `/fiat-transfer/${encodeURIComponent(reference)}`);
-  }
+export interface TransactionVerifyResponse {
+  reference: string;
+  status: string;
+  amount: number;
+  currency: string;
+  type?: string;
 }
 
 export interface BalanceResponse {
-  balance?: number;
-  currency?: string;
-  available?: boolean;
+  totalAvailableBalance: number;
+  usdEquivalent: number;
+  breakDown: Array<{
+    currency: string;
+    balance: number;
+    status: string;
+  }>;
 }
 
 export interface BankListEntry {
@@ -121,40 +151,4 @@ export interface BankListEntry {
   code: string;
   country: string;
   currency: string;
-}
-
-export interface AccountResolution {
-  accountName?: string;
-  accountNumber?: string;
-  bankCode?: string;
-}
-
-export interface InitiateNGNTransferParams {
-  amount: number;
-  currency?: "NGN";
-  recipientName: string;
-  accountNumber: string;
-  bankCode: string;
-  bankName?: string;
-  reference: string;
-  narration?: string;
-}
-
-export interface TransferResponse {
-  reference: string;
-  status: string;
-  amount: number;
-  currency: string;
-}
-
-export interface TransactionDetail {
-  reference: string;
-  status: string;
-  amount: number;
-  currency: string;
-  recipient?: {
-    name?: string;
-    account_number?: string;
-    bank_code?: string;
-  };
 }

@@ -2,9 +2,12 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-import { IvoryPayApiError, IvoryPayClient, type InitiateNGNTransferParams } from "./ivoryPayClient.js";
+import { CONFIG } from "./config.js";
+import { IvoryPayApiError, IvoryPayClient, type CreateTransactionParams } from "./ivoryPayClient.js";
 
-const ivoryPay = new IvoryPayClient();
+function getIvoryPayClient() {
+  return new IvoryPayClient();
+}
 
 type BankDirectoryEntry = {
   name: string;
@@ -85,7 +88,7 @@ function resolveNgNAmount(args: Record<string, unknown>) {
     ? args.exchange_rate
     : typeof args.exchangeRate === "number"
       ? args.exchangeRate
-      : Number(process.env.USD_TO_NGN_RATE ?? "1650");
+      : Number(process.env.USD_TO_NGN_RATE ?? "1300");
 
   if (amountNgn !== undefined) {
     if (amountNgn <= 0) {
@@ -169,7 +172,7 @@ function buildBankLookupResult(query?: string) {
 
 export async function checkBalance() {
   try {
-    if (process.env.GRAMPAY_MODE === "mock") {
+    if (CONFIG.MODE === "mock") {
       return {
         content: [
           {
@@ -188,7 +191,7 @@ export async function checkBalance() {
       };
     }
 
-    const balance = await ivoryPay.getBalance();
+    const balance = await getIvoryPayClient().getBalance();
     return {
       content: [{ type: "text" as const, text: JSON.stringify(balance, null, 2) }],
     };
@@ -223,63 +226,30 @@ export async function lookupBank(args: Record<string, unknown>) {
 export async function cashoutToNGN(args: Record<string, unknown>) {
   try {
     const normalized = resolveNgNAmount(args);
-    const recipientName = typeof args.recipientName === "string" ? args.recipientName : "Recipient";
-    const accountNumber = typeof args.accountNumber === "string" ? args.accountNumber : "";
-    const bankNameInput = typeof args.bankName === "string"
-      ? args.bankName
-      : typeof args.bank_name === "string"
-        ? args.bank_name
-        : "";
-    const bankCode = await resolveBankCode(args);
-    const bankName = typeof args.bankName === "string"
-      ? args.bankName
-      : typeof args.bank_name === "string"
-        ? args.bank_name
-    : findBank(bankCode)?.name ?? bankCode;
+    const firstName = typeof args.firstName === "string" ? args.firstName : "Test";
+    const lastName = typeof args.lastName === "string" ? args.lastName : "User";
+    const email = typeof args.email === "string" ? args.email : "test@example.com";
+    const reference = typeof args.reference === "string" ? args.reference : `cashout-${Date.now()}`;
 
-    if (!accountNumber) {
-      throw new Error("accountNumber is required");
-    }
-
-    if (!/^\d{10}$/.test(accountNumber)) {
-      throw new Error("accountNumber must be a 10-digit Nigerian bank account number");
-    }
-
-    if (bankNameInput && isWalletProvider(bankNameInput)) {
-      throw new Error(`"${bankNameInput}" is not supported. Use a real bank such as Access Bank.`);
-    }
-
-    const bankLookup = findBank(bankName) ?? findBank(bankCode);
-    if (!bankLookup) {
-      throw new Error(`Unknown bank: ${bankName}`);
-    }
-
-    if (isWalletProvider(bankLookup.name)) {
-      throw new Error(`"${bankLookup.name}" is not supported. Use a real bank such as Access Bank.`);
-    }
-
-    if (process.env.GRAMPAY_MODE === "mock") {
+    if (CONFIG.MODE === "mock") {
       return {
         content: [
           {
             type: "text" as const,
-            text: `Account verified. Payout prepared successfully. Reference: ${
-              typeof args.reference === "string" ? args.reference : `cashout-${Date.now()}`
-            }`,
+            text: `Mock mode: Transaction created and simulated. Reference: ${reference}`,
           },
           {
             type: "text" as const,
             text: JSON.stringify(
               {
                 mode: "mock",
-                status: "READY_FOR_EXECUTION",
-                amount_ngn: normalized.amount,
-                recipientName,
-                accountNumber,
-                bankName: bankLookup.name,
-                bankCode: bankLookup.code,
-                reference: typeof args.reference === "string" ? args.reference : `cashout-${Date.now()}`,
-                narration: typeof args.narration === "string" ? args.narration : "Cashout",
+                status: "SUCCESS",
+                reference,
+                amount: normalized.amount,
+                currency: "NGN",
+                firstName,
+                lastName,
+                email,
               },
               null,
               2
@@ -289,39 +259,65 @@ export async function cashoutToNGN(args: Record<string, unknown>) {
       };
     }
 
-    const transfer = await ivoryPay.initiateNGNTransfer({
-      amount: normalized.amount,
-      currency: "NGN",
-      recipientName,
-      accountNumber,
-      bankCode: bankLookup.code,
-      bankName: bankLookup.name,
-      reference: typeof args.reference === "string" ? args.reference : `cashout-${Date.now()}`,
-      narration: typeof args.narration === "string" ? args.narration : "Cashout",
-    } satisfies InitiateNGNTransferParams);
+    // Step 1: Create transaction
+    const txn = await getIvoryPayClient().createTransaction({
+      amount: normalized.amountUsd ?? normalized.amount,
+      email,
+      firstName,
+      lastName,
+      baseFiat: "NGN",
+      reference,
+    } as CreateTransactionParams);
 
-    const accountResolution = await ivoryPay.resolveBankAccount(accountNumber, bankLookup.code).catch(() => null);
+    // Step 2: Simulate payment (test mode only)
+    await getIvoryPayClient().simulatePayment(txn.reference);
+
+    // Step 3: Verify transaction
+    const verified = await getIvoryPayClient().verifyTransaction(txn.reference);
 
     return {
       content: [
         {
           type: "text" as const,
-          text: `Payout submitted successfully. Reference: ${transfer.reference}`,
+          text: `Payout initiated successfully. Status: ${verified.status}. Reference: ${verified.reference}`,
         },
         {
           type: "text" as const,
-          text: JSON.stringify(
-            {
-              transfer,
-              bank_lookup: {
-                bankName: bankLookup.name,
-                bankCode: bankLookup.code,
+          text: JSON.stringify(verified, null, 2),
+        },
+      ],
+    };
+  } catch (err) {
+    return toToolError(err);
+  }
+}
+
+export async function listSupportedBanks() {
+  try {
+    if (CONFIG.MODE === "mock") {
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: JSON.stringify(
+              {
+                mode: "mock",
+                message: "Supported bank list is only available in live mode.",
               },
-              account_resolution: accountResolution,
-            },
-            null,
-            2
-          ),
+              null,
+              2
+            ),
+          },
+        ],
+      };
+    }
+
+    const banks = await getIvoryPayClient().listBanks();
+    return {
+      content: [
+        {
+          type: "text" as const,
+          text: JSON.stringify({ count: banks.length, banks }, null, 2),
         },
       ],
     };
@@ -332,7 +328,7 @@ export async function cashoutToNGN(args: Record<string, unknown>) {
 
 export async function checkTransferStatus(args: { reference: string }) {
   try {
-    const transaction = await ivoryPay.getTransaction(args.reference);
+    const transaction = await getIvoryPayClient().verifyTransaction(args.reference);
     return {
       content: [{ type: "text" as const, text: JSON.stringify(transaction, null, 2) }],
     };

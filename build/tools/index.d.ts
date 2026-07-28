@@ -5,6 +5,7 @@ export declare const TOOLS: ({
         type: string;
         properties: {
             query?: never;
+            country?: never;
             amount_usd?: never;
             prepare_token?: never;
             tx_id?: never;
@@ -29,6 +30,32 @@ export declare const TOOLS: ({
                 type: string;
                 description: string;
             };
+            country?: never;
+            amount_usd?: never;
+            prepare_token?: never;
+            tx_id?: never;
+            amount?: never;
+            exchange_rate?: never;
+            recipientName?: never;
+            accountNumber?: never;
+            bankCode?: never;
+            bankName?: never;
+            reference?: never;
+            narration?: never;
+        };
+        required: never[];
+    };
+} | {
+    name: string;
+    description: string;
+    inputSchema: {
+        type: string;
+        properties: {
+            country: {
+                type: string;
+                description: string;
+            };
+            query?: never;
             amount_usd?: never;
             prepare_token?: never;
             tx_id?: never;
@@ -54,6 +81,7 @@ export declare const TOOLS: ({
                 description: string;
             };
             query?: never;
+            country?: never;
             prepare_token?: never;
             tx_id?: never;
             amount?: never;
@@ -78,6 +106,7 @@ export declare const TOOLS: ({
                 description: string;
             };
             query?: never;
+            country?: never;
             amount_usd?: never;
             tx_id?: never;
             amount?: never;
@@ -102,6 +131,7 @@ export declare const TOOLS: ({
                 description: string;
             };
             query?: never;
+            country?: never;
             amount_usd?: never;
             prepare_token?: never;
             amount?: never;
@@ -158,6 +188,7 @@ export declare const TOOLS: ({
                 description: string;
             };
             query?: never;
+            country?: never;
             prepare_token?: never;
             tx_id?: never;
         };
@@ -174,6 +205,7 @@ export declare const TOOLS: ({
                 description: string;
             };
             query?: never;
+            country?: never;
             amount_usd?: never;
             prepare_token?: never;
             tx_id?: never;

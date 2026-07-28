@@ -4,7 +4,7 @@ import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprot
 import { CONFIG } from "./config.js";
 import { TOOLS } from "./tools/index.js";
 import * as handlers from "./tools/handlers.js";
-import { cashoutToNGN, checkBalance, checkTransferStatus, lookupBank, } from "./ivoryPayMcpTools.js";
+import { cashoutToNGN, checkBalance, checkTransferStatus, lookupBank, listSupportedBanks, } from "./ivoryPayMcpTools.js";
 const server = new Server({
     name: "grampay-mcp-server",
     version: "0.1.0",
@@ -50,6 +50,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 break;
             case "grampay_lookup_bank":
                 result = await lookupBank(args);
+                break;
+            case "list_supported_banks":
+                result = await listSupportedBanks();
                 break;
             case "cashout_to_ngn":
                 result = await cashoutToNGN(args);

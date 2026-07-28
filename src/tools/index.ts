@@ -32,6 +32,20 @@ export const TOOLS = [
     },
   },
   {
+    name: "list_supported_banks",
+    description: "List IvoryPay-supported banks and codes for live NGN payouts",
+    inputSchema: {
+      type: "object",
+      properties: {
+        country: {
+          type: "string",
+          description: "Optional country code, e.g. NG",
+        },
+      },
+      required: [],
+    },
+  },
+  {
     name: "grampay_get_quote",
     description: "Get live USDC -> NGN rate quote",
     inputSchema: {
