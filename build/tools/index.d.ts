@@ -17,6 +17,11 @@ export declare const TOOLS: ({
             bankName?: never;
             reference?: never;
             narration?: never;
+            email?: never;
+            firstName?: never;
+            lastName?: never;
+            type?: never;
+            baseFiat?: never;
         };
         required: never[];
     };
@@ -42,6 +47,11 @@ export declare const TOOLS: ({
             bankName?: never;
             reference?: never;
             narration?: never;
+            email?: never;
+            firstName?: never;
+            lastName?: never;
+            type?: never;
+            baseFiat?: never;
         };
         required: never[];
     };
@@ -67,6 +77,11 @@ export declare const TOOLS: ({
             bankName?: never;
             reference?: never;
             narration?: never;
+            email?: never;
+            firstName?: never;
+            lastName?: never;
+            type?: never;
+            baseFiat?: never;
         };
         required: never[];
     };
@@ -92,6 +107,11 @@ export declare const TOOLS: ({
             bankName?: never;
             reference?: never;
             narration?: never;
+            email?: never;
+            firstName?: never;
+            lastName?: never;
+            type?: never;
+            baseFiat?: never;
         };
         required: string[];
     };
@@ -117,6 +137,11 @@ export declare const TOOLS: ({
             bankName?: never;
             reference?: never;
             narration?: never;
+            email?: never;
+            firstName?: never;
+            lastName?: never;
+            type?: never;
+            baseFiat?: never;
         };
         required: string[];
     };
@@ -142,6 +167,11 @@ export declare const TOOLS: ({
             bankName?: never;
             reference?: never;
             narration?: never;
+            email?: never;
+            firstName?: never;
+            lastName?: never;
+            type?: never;
+            baseFiat?: never;
         };
         required: string[];
     };
@@ -191,6 +221,11 @@ export declare const TOOLS: ({
             country?: never;
             prepare_token?: never;
             tx_id?: never;
+            email?: never;
+            firstName?: never;
+            lastName?: never;
+            type?: never;
+            baseFiat?: never;
         };
         required: string[];
     };
@@ -216,6 +251,84 @@ export declare const TOOLS: ({
             bankCode?: never;
             bankName?: never;
             narration?: never;
+            email?: never;
+            firstName?: never;
+            lastName?: never;
+            type?: never;
+            baseFiat?: never;
+        };
+        required: string[];
+    };
+} | {
+    name: string;
+    description: string;
+    inputSchema: {
+        type: string;
+        properties: {
+            amount: {
+                type: string;
+                description?: never;
+            };
+            email: {
+                type: string;
+            };
+            firstName: {
+                type: string;
+            };
+            lastName: {
+                type: string;
+            };
+            type: {
+                type: string;
+            };
+            baseFiat: {
+                type: string;
+            };
+            reference: {
+                type: string;
+                description?: never;
+            };
+            query?: never;
+            country?: never;
+            amount_usd?: never;
+            prepare_token?: never;
+            tx_id?: never;
+            exchange_rate?: never;
+            recipientName?: never;
+            accountNumber?: never;
+            bankCode?: never;
+            bankName?: never;
+            narration?: never;
+        };
+        required: string[];
+    };
+} | {
+    name: string;
+    description: string;
+    inputSchema: {
+        type: string;
+        properties: {
+            reference: {
+                type: string;
+                description?: never;
+            };
+            query?: never;
+            country?: never;
+            amount_usd?: never;
+            prepare_token?: never;
+            tx_id?: never;
+            amount?: never;
+            exchange_rate?: never;
+            recipientName?: never;
+            accountNumber?: never;
+            bankCode?: never;
+            bankName?: never;
+            narration?: never;
+            email?: never;
+            firstName?: never;
+            lastName?: never;
+            type?: never;
+            baseFiat?: never;
         };
         required: string[];
     };

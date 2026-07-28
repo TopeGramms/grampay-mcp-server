@@ -1,3 +1,18 @@
+export interface PendingToken {
+    amount_usd: number;
+    amount_ngn: number;
+    bank_name: string;
+    bank_account: string;
+    timestamp: string;
+    expires_at: string;
+}
+export interface CompletedTx {
+    amount_usd: number;
+    amount_ngn: number;
+    destination: string;
+    timestamp: string;
+    status: string;
+}
 export declare function handleGetConfig(): Promise<{
     mode: string;
     default_bank_name: string;
@@ -30,8 +45,8 @@ export declare function handleExecuteCashout(prepareToken: string): Promise<{
     tx_id: string;
     status: string;
     details: {
-        amount_usd: any;
-        amount_ngn: any;
+        amount_usd: number;
+        amount_ngn: number;
         destination: string;
         timestamp: string;
     };
@@ -44,8 +59,8 @@ export declare function handleGetStatus(txId: string): Promise<{
     details?: never;
 } | {
     tx_id: string;
-    status: any;
-    details: any;
+    status: string;
+    details: CompletedTx;
     message?: never;
 }>;
 //# sourceMappingURL=handlers.d.ts.map

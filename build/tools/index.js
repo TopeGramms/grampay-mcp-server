@@ -102,15 +102,6 @@ export const TOOLS = [
         },
     },
     {
-        name: "check_balance",
-        description: "Check available balance across all currencies (NGN, KES, etc.)",
-        inputSchema: {
-            type: "object",
-            properties: {},
-            required: [],
-        },
-    },
-    {
         name: "cashout_to_ngn",
         description: "Initiate a bank payout in NGN to a real bank account. Accepts amount (NGN) or amount_usd for automatic USD -> NGN conversion.",
         inputSchema: {
@@ -136,6 +127,45 @@ export const TOOLS = [
             type: "object",
             properties: {
                 reference: { type: "string", description: "Transaction reference from cashout_to_ngn" },
+            },
+            required: ["reference"],
+        },
+    },
+    {
+        name: "create_transaction",
+        description: "Create a fiat payout transaction on IvoryPay.",
+        inputSchema: {
+            type: "object",
+            properties: {
+                amount: { type: "number" },
+                email: { type: "string" },
+                firstName: { type: "string" },
+                lastName: { type: "string" },
+                type: { type: "string" },
+                baseFiat: { type: "string" },
+                reference: { type: "string" },
+            },
+            required: ["amount", "email", "firstName", "lastName", "reference"],
+        },
+    },
+    {
+        name: "simulate_payment",
+        description: "Simulate payment completion for a transaction (Test Mode only)",
+        inputSchema: {
+            type: "object",
+            properties: {
+                reference: { type: "string" },
+            },
+            required: ["reference"],
+        },
+    },
+    {
+        name: "verify_transaction",
+        description: "Verify the status of a transaction",
+        inputSchema: {
+            type: "object",
+            properties: {
+                reference: { type: "string" },
             },
             required: ["reference"],
         },

@@ -1,11 +1,38 @@
 import { CONFIG } from "../config.js";
 
+export interface PendingToken {
+  amount_usd: number;
+  amount_ngn: number;
+  bank_name: string;
+  bank_account: string;
+  timestamp: string;
+  expires_at: string;
+}
+
+export interface CompletedTx {
+  amount_usd: number;
+  amount_ngn: number;
+  destination: string;
+  timestamp: string;
+  status: string;
+}
+
 // Mock state (in-memory for Phase 0)
 const mockState = {
   balance_usd: 250.0, // Mock USDC balance
-  pending_tokens: new Map<string, any>(),
-  completed_txs: new Map<string, any>(),
+  pending_tokens: new Map<string, PendingToken>(),
+  completed_txs: new Map<string, CompletedTx>(),
 };
+
+// Periodic cleanup of expired tokens
+setInterval(() => {
+  const now = new Date();
+  for (const [token, prep] of mockState.pending_tokens.entries()) {
+    if (new Date(prep.expires_at) < now) {
+      mockState.pending_tokens.delete(token);
+    }
+  }
+}, 60000).unref();
 
 export async function handleGetConfig() {
   return {
@@ -13,7 +40,7 @@ export async function handleGetConfig() {
     default_bank_name: CONFIG.DEFAULT_BANK_NAME,
     default_bank_account: "****" + CONFIG.DEFAULT_BANK_ACCOUNT.slice(-4), // Masked
     max_cashout_usd: CONFIG.MAX_CASHOUT_USD,
-    rate_usd_to_ngn: 1640, // Mock rate
+    rate_usd_to_ngn: CONFIG.USD_TO_NGN_RATE,
   };
 }
 
@@ -33,7 +60,7 @@ export async function handleGetQuote(amountUsd: number) {
     throw new Error("Amount must be positive");
   }
 
-  const rateUsdToNgn = 1640; // Mock rate
+  const rateUsdToNgn = CONFIG.USD_TO_NGN_RATE; // Using central rate
   const amountNgn = amountUsd * rateUsdToNgn;
 
   return {
@@ -66,7 +93,7 @@ export async function handlePrepareCashout(amountUsd: number) {
   // Store preparation details
   mockState.pending_tokens.set(token, {
     amount_usd: amountUsd,
-    amount_ngn: amountUsd * 1640,
+    amount_ngn: amountUsd * CONFIG.USD_TO_NGN_RATE,
     bank_name: CONFIG.DEFAULT_BANK_NAME,
     bank_account: CONFIG.DEFAULT_BANK_ACCOUNT,
     timestamp: new Date().toISOString(),
@@ -77,8 +104,8 @@ export async function handlePrepareCashout(amountUsd: number) {
     prepare_token: token,
     summary: {
       amount_usd: amountUsd,
-      amount_ngn: amountUsd * 1640,
-      rate: 1640,
+      amount_ngn: amountUsd * CONFIG.USD_TO_NGN_RATE,
+      rate: CONFIG.USD_TO_NGN_RATE,
       destination: `${CONFIG.DEFAULT_BANK_NAME} ****${CONFIG.DEFAULT_BANK_ACCOUNT.slice(-4)}`,
       status: "READY_FOR_CONFIRMATION",
     },

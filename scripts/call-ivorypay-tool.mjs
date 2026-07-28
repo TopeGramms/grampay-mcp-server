@@ -1,6 +1,7 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import dotenv from 'dotenv';
+import crypto from 'crypto';
 
 dotenv.config();
 
@@ -15,26 +16,52 @@ const client = new Client({ name: 'grampay-local-client', version: '1.0.0' }, { 
 
 async function main() {
   await client.connect(transport);
-  const tools = await client.listTools();
-  console.log('Tools:', tools.tools.map((t) => t.name));
 
-  const supportedBanks = await client.callTool({
-    name: 'list_supported_banks',
-    arguments: { country: 'NG' },
-  });
-  console.log('Supported banks:', JSON.stringify(supportedBanks, null, 2));
-
-  const bankResult = await client.callTool({
-    name: 'cashout_to_ngn',
+  // Test: Create transaction → Simulate → Verify
+  const createResult = await client.callTool({
+    name: "create_transaction",
     arguments: {
-      amount_usd: 1,
-      firstName: 'Adekalu',
-      lastName: 'Temitope',
-      email: 'hardekhalu@gmail.com',
-      reference: `ivorypay-test-${Date.now()}`,
+      amount: 5000,
+      email: "hardekhalu@gmail.com",
+      firstName: "Adekalu",
+      lastName: "Temitope",
+      type: "FIAT",
+      baseFiat: "NGN",
+      reference: crypto.randomUUID(),
     },
   });
-  console.log('Bank payout result:', JSON.stringify(bankResult, null, 2));
+
+  console.log("Transaction created:", JSON.stringify(createResult, null, 2));
+
+  let reference = "";
+  try {
+    const data = JSON.parse(createResult.content[createResult.content.length - 1].text);
+    reference = data.reference;
+  } catch (e) {
+    if (!reference) {
+      try {
+        const data2 = JSON.parse(createResult.content[0].text);
+        reference = data2.reference;
+      } catch (e2) { }
+    }
+  }
+
+  // Simulate payment
+  const simulateResult = await client.callTool({
+    name: "simulate_payment",
+    arguments: { reference: reference },
+  });
+
+  console.log("Payment simulated:", JSON.stringify(simulateResult, null, 2));
+
+  // Verify
+  const verifyResult = await client.callTool({
+    name: "verify_transaction",
+    arguments: { reference: reference },
+  });
+
+  console.log("Final status:", JSON.stringify(verifyResult, null, 2));
+
   await transport.close();
 }
 

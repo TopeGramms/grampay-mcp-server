@@ -1,6 +1,4 @@
-import dotenv from "dotenv";
-
-dotenv.config();
+import { CONFIG } from "./config.js";
 
 const IVORYPAY_BASE_URL = "https://api.ivorypay.io/api/v1";
 
@@ -26,18 +24,17 @@ export class IvoryPayApiError extends Error {
   }
 }
 
-function loadSecretKey(): string {
-  const key = process.env.IVORYPAY_SECRET_KEY;
-  return key ?? "";
+function loadSecretKey(): string | undefined {
+  return CONFIG.IVORYPAY_SECRET_KEY;
 }
 
 export class IvoryPayClient {
-  private secretKey?: string;
+  private secretKey?: string | undefined;
   private env: string;
 
   constructor(secretKey?: string, env?: string) {
     this.secretKey = secretKey ?? loadSecretKey();
-    this.env = env ?? process.env.IVORYPAY_ENV ?? "test";
+    this.env = env ?? CONFIG.IVORYPAY_ENV ?? "test";
   }
 
   private headers(): HeadersInit {
@@ -57,6 +54,7 @@ export class IvoryPayClient {
       method,
       headers: this.headers(),
       ...(body ? { body: JSON.stringify(body) } : {}),
+      signal: AbortSignal.timeout(15000),
     });
 
     const contentType = res.headers.get("content-type") || "";
@@ -85,6 +83,8 @@ export class IvoryPayClient {
       type: "FIAT",
       baseFiat: params.baseFiat ?? "NGN",
       reference: params.reference,
+      mode: "API",
+      crypto: "USDC",
     });
   }
 

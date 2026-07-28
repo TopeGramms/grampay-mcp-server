@@ -1,11 +1,10 @@
-import dotenv from "dotenv";
 
-dotenv.config();
 
 import { CONFIG } from "./config.js";
 import { IvoryPayApiError, IvoryPayClient, type CreateTransactionParams } from "./ivoryPayClient.js";
+import crypto from "crypto";
 
-function getIvoryPayClient() {
+export function getIvoryPayClient() {
   return new IvoryPayClient();
 }
 
@@ -88,7 +87,7 @@ function resolveNgNAmount(args: Record<string, unknown>) {
     ? args.exchange_rate
     : typeof args.exchangeRate === "number"
       ? args.exchangeRate
-      : Number(process.env.USD_TO_NGN_RATE ?? "1300");
+      : CONFIG.USD_TO_NGN_RATE;
 
   if (amountNgn !== undefined) {
     if (amountNgn <= 0) {
@@ -229,7 +228,7 @@ export async function cashoutToNGN(args: Record<string, unknown>) {
     const firstName = typeof args.firstName === "string" ? args.firstName : "Test";
     const lastName = typeof args.lastName === "string" ? args.lastName : "User";
     const email = typeof args.email === "string" ? args.email : "test@example.com";
-    const reference = typeof args.reference === "string" ? args.reference : `cashout-${Date.now()}`;
+    const reference = typeof args.reference === "string" ? args.reference : crypto.randomUUID();
 
     if (CONFIG.MODE === "mock") {
       return {
