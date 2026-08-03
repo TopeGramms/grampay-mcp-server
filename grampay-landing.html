@@ -82,7 +82,72 @@
   nav.header-links a { border-bottom: none; color: var(--ink-soft); }
   nav.header-links a:hover { color: var(--naira); }
 
-  .hero { padding-top: 56px; padding-bottom: 40px; }
+  .hero { padding-top: 56px; padding-bottom: 40px; position: relative; overflow: hidden; }
+
+  /* ---- Money animations ---- */
+  #money-particles {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 0;
+  }
+  .money-particle {
+    position: absolute;
+    font-family: 'IBM Plex Mono', monospace;
+    opacity: 0;
+    user-select: none;
+    animation: moneyFloat linear infinite;
+    will-change: transform, opacity;
+  }
+  @keyframes moneyFloat {
+    0%   { opacity: 0;  transform: translateY(0)      rotate(-6deg);  }
+    10%  { opacity: var(--mpeak, 0.11); }
+    80%  { opacity: var(--mpeak, 0.11); }
+    100% { opacity: 0;  transform: translateY(-400px) rotate(14deg);  }
+  }
+
+  /* Rate ticker */
+  .rate-ticker {
+    overflow: hidden;
+    white-space: nowrap;
+    border-top: 1px dashed var(--rule-strong);
+    border-bottom: 1px dashed var(--rule-strong);
+    padding: 9px 0;
+    background: var(--paper);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.73rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.06em;
+  }
+  .ticker-track {
+    display: inline-block;
+    white-space: nowrap;
+    animation: tickerScroll 36s linear infinite;
+  }
+  .rate-ticker:hover .ticker-track { animation-play-state: paused; }
+  @keyframes tickerScroll {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  .ticker-em { color: var(--naira-bright); font-weight: 500; }
+  .ticker-sep { padding: 0 18px; color: var(--rule-strong); }
+
+  /* Coin burst */
+  .cburst {
+    position: fixed;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0;
+    animation: cBurst 0.7s cubic-bezier(.25,.46,.45,.94) forwards;
+  }
+  @keyframes cBurst {
+    0%   { opacity: 0.95; transform: translate(0,0)                              scale(1);   }
+    100% { opacity: 0;    transform: translate(var(--bx,20px),var(--by,-32px))  scale(0.3); }
+  }
   .eyebrow {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 0.72rem;
@@ -332,6 +397,7 @@
 
   <main>
     <section class="hero sheet">
+      <div id="money-particles" aria-hidden="true"></div>
       <div class="eyebrow reveal-init hero-anim">MCP Connector · Crypto → NGN</div>
       <h1 class="reveal-init hero-anim">Tell your AI to cash out.<br>It reaches a <em>Nigerian bank account.</em></h1>
       <p class="lede reveal-init hero-anim">
@@ -355,11 +421,11 @@
         </div>
         <div class="ledger-row">
           <span class="ledger-key">amount</span>
-          <span class="ledger-val">₦ 500.00</span>
+          <span class="ledger-val" id="amount-val">₦ 165,000.00</span>
         </div>
         <div class="ledger-row">
           <span class="ledger-key">reference</span>
-          <span class="ledger-val" id="ref-val">test-1785…</span>
+          <span class="ledger-val" id="ref-val">1785…</span>
         </div>
         <div class="ledger-row">
           <span class="ledger-key">status</span>
@@ -371,6 +437,13 @@
         </div>
       </div>
     </section>
+
+    <div class="rate-ticker" aria-hidden="true">
+      <span class="ticker-track">
+        <span class="ticker-em">1 USDC</span> = <span class="ticker-em">₦1,650</span><span class="ticker-sep">·</span>Crypto → Naira, instant<span class="ticker-sep">·</span><span class="ticker-em">IvoryPay</span> settlement<span class="ticker-sep">·</span>USDT → NGN<span class="ticker-sep">·</span>BTC → NGN<span class="ticker-sep">·</span>ETH → NGN<span class="ticker-sep">·</span>cashout_to_ngn tool call<span class="ticker-sep">·</span><span class="ticker-em">₦1,650</span> / USDC<span class="ticker-sep">·</span>Nigerian bank accounts<span class="ticker-sep">·</span>MCP · Model Context Protocol<span class="ticker-sep">·</span>grampay_execute_cashout<span class="ticker-sep">·</span>
+        <span class="ticker-em">1 USDC</span> = <span class="ticker-em">₦1,650</span><span class="ticker-sep">·</span>Crypto → Naira, instant<span class="ticker-sep">·</span><span class="ticker-em">IvoryPay</span> settlement<span class="ticker-sep">·</span>USDT → NGN<span class="ticker-sep">·</span>BTC → NGN<span class="ticker-sep">·</span>ETH → NGN<span class="ticker-sep">·</span>cashout_to_ngn tool call<span class="ticker-sep">·</span><span class="ticker-em">₦1,650</span> / USDC<span class="ticker-sep">·</span>Nigerian bank accounts<span class="ticker-sep">·</span>MCP · Model Context Protocol<span class="ticker-sep">·</span>grampay_execute_cashout<span class="ticker-sep">·</span>
+      </span>
+    </div>
 
     <hr class="rule sheet" style="max-width:760px; margin-left:auto; margin-right:auto;">
 
@@ -552,6 +625,74 @@
   document.addEventListener('DOMContentLoaded', function () {
     var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+    // ---- Floating money particles ----
+    var particleContainer = document.getElementById('money-particles');
+    var symbols = ['₦', '₦', '₦', '₦', '$', '₿', '₦', 'NGN', '$'];
+    var pColors = ['var(--naira)', 'var(--naira)', 'var(--naira)', 'var(--amber)', 'var(--signal)'];
+
+    function spawnParticle() {
+      if (reduceMotion || !particleContainer) return;
+      var el = document.createElement('span');
+      el.className = 'money-particle';
+      el.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+      var size = (0.65 + Math.random() * 0.75).toFixed(2);
+      el.style.fontSize = size + 'rem';
+      el.style.left = (4 + Math.random() * 92) + '%';
+      el.style.bottom = '-24px';
+      var dur = (6 + Math.random() * 9).toFixed(1);
+      var delay = (Math.random() * 3).toFixed(1);
+      el.style.animationDuration = dur + 's';
+      el.style.animationDelay = delay + 's';
+      el.style.setProperty('--mpeak', (0.07 + Math.random() * 0.1).toFixed(3));
+      el.style.color = pColors[Math.floor(Math.random() * pColors.length)];
+      particleContainer.appendChild(el);
+      setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); },
+        (parseFloat(dur) + parseFloat(delay) + 1) * 1000);
+    }
+
+    if (!reduceMotion) {
+      for (var pi = 0; pi < 10; pi++) setTimeout(spawnParticle, pi * 500);
+      setInterval(spawnParticle, 1600);
+    }
+
+    // ---- Amount counter ----
+    var amountEl = document.getElementById('amount-val');
+    function animateCount(from, to, dur, el) {
+      if (!el) return;
+      var start = null;
+      function step(ts) {
+        if (!start) start = ts;
+        var p = Math.min((ts - start) / dur, 1);
+        var v = Math.round(from + (to - from) * p);
+        el.textContent = '₦ ' + v.toLocaleString() + '.00';
+        if (p < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+
+    // ---- Coin burst ----
+    function spawnBurst(anchor) {
+      if (reduceMotion || !anchor) return;
+      var rect = anchor.getBoundingClientRect();
+      var cx = rect.left + rect.width / 2;
+      var cy = rect.top + rect.height / 2;
+      var bColors = ['#A8752A', '#D4A847', '#1C7A4B', '#4ADE80', '#F5D06C'];
+      for (var k = 0; k < 10; k++) {
+        var c = document.createElement('div');
+        c.className = 'cburst';
+        var angle = (k / 10) * 2 * Math.PI;
+        var dist = 26 + Math.random() * 22;
+        c.style.setProperty('--bx', (Math.cos(angle) * dist).toFixed(1) + 'px');
+        c.style.setProperty('--by', (Math.sin(angle) * dist).toFixed(1) + 'px');
+        c.style.left = cx + 'px';
+        c.style.top  = cy + 'px';
+        c.style.background = bColors[k % bColors.length];
+        c.style.animationDelay = (k * 0.025).toFixed(3) + 's';
+        document.body.appendChild(c);
+        setTimeout(function (el) { if (el.parentNode) el.parentNode.removeChild(el); }, 900, c);
+      }
+    }
+
     // ---- Hero entrance: staggered fade/rise on load ----
     var heroEls = document.querySelectorAll('.hero-anim');
     heroEls.forEach(function (el, i) {
@@ -594,7 +735,7 @@
     var check = document.getElementById('status-check');
 
     function randomRef() {
-      return 'test-' + Math.floor(1780000000 + Math.random() * 9000000);
+      return Math.floor(1780000000 + Math.random() * 9000000);
     }
 
     function runCycle() {
@@ -612,7 +753,11 @@
         if (!reduceMotion) {
           void pill.offsetWidth; // restart animation
           pill.classList.add('stamp-pop');
-          setTimeout(function () { check.classList.add('show'); }, 180);
+          setTimeout(function () {
+            check.classList.add('show');
+            spawnBurst(pill);
+          }, 180);
+          animateCount(0, 165000, 900, amountEl);
         } else {
           check.classList.add('show');
         }
