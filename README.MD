@@ -2,71 +2,42 @@
 
 [![Superteam Nigeria](https://img.shields.io/badge/Superteam-Nigeria-emerald)](https://superteam.fun)
 [![MCP Protocol](https://img.shields.io/badge/Protocol-MCP%20v1.2-purple)](https://modelcontextprotocol.io)
+[![Transport](https://img.shields.io/badge/Transport-Streamable%20HTTP%20%7C%20stdio-blue)](#-deployment--transports)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-An open-source **Model Context Protocol (MCP)** server enabling AI Agents (Claude, ChatGPT, Cursor, Autonomous Workers) to execute real-time crypto liquidity cashouts directly into Nigerian Bank Accounts (NGN).
+An open-source **Model Context Protocol (MCP)** server enabling AI Agents (Claude, ChatGPT, Cursor, Autonomous Workers) to execute real-time crypto liquidity cashouts directly into Nigerian Bank Accounts (NGN) via **IvoryPay**.
 
-GramPay serves as the payment execution bridge between LLM function calling and licensed African payment infrastructure via **IvoryPay**.
-
----
-
-## 🌟 Grant Reviewer Summary
-
-### Key Value Proposition
-African creators and developers routinely earn in global digital assets (USDC, USDT, SOL), but face significant friction converting liquidity to spendable local currency (NGN). GramPay empowers AI Agents to perform compliant, automated bank payouts on behalf of users in a single conversational prompt.
-
-### Current Implementation Status
-* **Provider Integration:** Direct integration with **IvoryPay API** (supporting standard NGN fiat payouts).
-* **Testnet Ready:** Confirmed end-to-end execution flow (Transaction Creation → Payment Simulation → Status Verification).
-* **Security Guardrails:** Safety limits (`MAX_CASHOUT_USD`), parameter enforcement, and environment isolation.
-* **Bank Directory Matching:** Built-in resolution catalog mapping friendly bank names (e.g., "Access Bank", "GTB") to official CBN bank codes, with anti-wallet filter protections.
+GramPay serves as the payment execution bridge between LLM function calling and licensed African payment infrastructure.
 
 ---
 
-## 🛠️ MCP Tools Reference
+## 🌐 Live Landing Page & Architecture
 
-The server exposes 9 specialized tools to MCP clients:
+GramPay includes a built-in interactive landing page served at the root URL (`/`), explaining how to use GramPay directly inside conversational AI interfaces.
 
-| Tool | Purpose | Required Inputs |
-| :--- | :--- | :--- |
-| `cashout_to_ngn` | Core tool to execute payout in NGN from USD/NGN amounts | `accountNumber`, `reference`, `firstName`, `lastName`, `email` |
-| `check_transfer_status` | Query live status of a pending/completed payout | `reference` |
-| `grampay_lookup_bank` | Local directory search for Nigerian banks & codes | *Optional:* `query` |
-| `list_supported_banks` | Fetch live supported settlement banks from IvoryPay | None |
-| `grampay_get_balance` | Check current merchant treasury liquidity balance | None |
-| `grampay_get_config` | Retrieve server runtime configuration and limits | None |
-| `create_transaction` | Step 1/3: Low-level transaction creation | `amount`, `email`, `firstName`, `lastName`, `reference` |
-| `simulate_payment` | Step 2/3: Test-mode payment simulation trigger | `reference` |
-| `verify_transaction` | Step 3/3: Direct status lookup from IvoryPay endpoint | `reference` |
+- **Landing Page**: `https://<your-deployed-domain>.com/`
+- **MCP HTTP Endpoint**: `https://<your-deployed-domain>.com/mcp`
+- **Health Check**: `https://<your-deployed-domain>.com/health`
 
 ---
 
-## ⚡ Quick Start
+## ⚡ Quick Start: Adding as a Claude Connector (Settings → Connectors)
 
-### 1. Prerequisites
-* **Node.js**: `v18.0.0` or higher
-* **npm**: `v9.0.0` or higher
+You can add GramPay directly to **Claude** (Web & Desktop) via **Settings → Connectors**.
 
-### 2. Installation & Build
+### 1. Cloud Deployment (Render / Railway)
+Deploy the server as a **Web Service** on Render or Railway:
+* **Build Command**: `npm install && npm run build`
+* **Start Command**: `node build/httpServer.js`
 
-```bash
-git clone https://github.com/TopeGramms/grampay-mcp-server.git
-cd grampay-mcp-server
-npm install
-npm run build
-```
-
-### 3. Environment Configuration
-
-Copy the sample configuration file and add your credentials:
-
-```bash
-cp .env.example .env
-```
-
-Configure `.env`:
+### 2. Environment Variables Configuration
+Set the following environment variables in your deployment dashboard:
 
 ```env
+PORT=3000
+MCP_AUTH_TOKEN=d5775a3eebb61cc45108d8e55f5adc481dc2927384b9d1012b7d9aa48ea9a249
+JWT_SECRET=78b8be3a554ac5c884fb27891965dd49d78b50dd7b1319e16a1dcbd850d73af5
+
 IVORYPAY_SECRET_KEY=sk_test_your_key_here
 IVORYPAY_PUBLIC_KEY=pk_test_your_key_here
 IVORYPAY_ENV=test
@@ -76,20 +47,43 @@ GRAMPAY_MAX_CASHOUT_USD=1000
 USD_TO_NGN_RATE=1650
 ```
 
-### 4. Mounting to Claude Desktop / Cursor
+### 3. Registering Connector inside Claude
+1. Go to **Claude** → **Settings** → **Connectors** (or **Customize → Connectors**).
+2. Click **Add custom connector**.
+3. Fill in the fields:
+   - **Name**: `GramPay`
+   - **Remote Server URL**: `https://your-app-name.onrender.com/mcp?token=YOUR_MCP_AUTH_TOKEN`
+   - **Advanced Settings (OAuth)**: *Leave blank / empty*
+4. Click **Save / Connect**. Claude will automatically discover all tools!
 
-Add GramPay to your MCP settings file (e.g., `claude_desktop_config.json`):
+---
+
+## 💻 Local Desktop Setup (stdio Transport for Claude Desktop / Cursor)
+
+To run GramPay locally via `stdio` child process with Claude Desktop or Cursor:
+
+### 1. Build project
+```bash
+git clone https://github.com/TopeGramms/grampay-mcp-server.git
+cd grampay-mcp-server
+npm install
+npm run build
+```
+
+### 2. Configure `claude_desktop_config.json`
+Add GramPay to your local configuration:
 
 ```json
 {
   "mcpServers": {
     "grampay": {
       "command": "node",
-      "args": ["c:/path/to/grampay-mcp-server/build/index.js"],
+      "args": ["/path/to/grampay-mcp-server/build/index.js"],
       "env": {
         "IVORYPAY_SECRET_KEY": "sk_test_your_key_here",
         "IVORYPAY_ENV": "test",
-        "GRAMPAY_MODE": "live"
+        "GRAMPAY_MODE": "live",
+        "JWT_SECRET": "your_jwt_secret_here"
       }
     }
   }
@@ -98,20 +92,37 @@ Add GramPay to your MCP settings file (e.g., `claude_desktop_config.json`):
 
 ---
 
-## 🧪 Testing the Integration
+## 🛠️ Exposed MCP Tools Reference
 
-Run the bundled MCP client test script to perform a full execution loop:
+GramPay exposes 13 specialized tools to MCP clients:
 
-```bash
-node scripts/call-ivorypay-tool.mjs
-```
+| Tool Name | Purpose | Key Inputs |
+| :--- | :--- | :--- |
+| `cashout_to_ngn` | Execute direct NGN bank payout from USD/NGN amounts | `accountNumber`, `bankName`, `firstName`, `lastName`, `email` |
+| `check_transfer_status` | Query live status of a pending/completed payout | `reference` |
+| `grampay_prepare_cashout` | Step 1/2: Validate limits and generate stateless signed JWT token | `amount_usd` |
+| `grampay_execute_cashout` | Step 2/2: Execute cashout using prepare JWT token | `prepare_token` |
+| `grampay_get_quote` | Get live USDC -> NGN conversion rates | `amount_usd` |
+| `grampay_lookup_bank` | Local directory search for Nigerian banks & codes | `query` |
+| `list_supported_banks` | Fetch live supported settlement banks from IvoryPay | None |
+| `grampay_get_balance` | Check current merchant liquidity balance | None |
+| `grampay_get_config` | Retrieve server runtime configuration and limits | None |
+| `grampay_get_status` | Check status of transaction by ID | `tx_id` |
+| `create_transaction` | Low-level transaction creation on IvoryPay API | `amount`, `email`, `firstName`, `lastName`, `reference` |
+| `simulate_payment` | Trigger payment simulation (Test Mode only) | `reference` |
+| `verify_transaction` | Query direct status verification from IvoryPay | `reference` |
 
 ---
 
-## 🔒 Security & Architecture
+## 🔒 Security & Architecture Features
 
-* **Strict Input Validation:** All API calls enforce UUID reference structures, positive numerical bounds, and required identity fields.
-* **Environment Safeguards:** Payment simulation (`simulate_payment`) is strictly restricted to test environments (`IVORYPAY_ENV=test`).
-* **Zero Secret Leakage:** API credentials are strictly read from environment variables; zero hardcoded fallback accounts exist in the codebase.
+* **Dual Transport Architecture**: Supports both `Streamable HTTP` for remote cloud connectors and `stdio` for local process spawning.
+* **Stateless JWT Prepare Tokens**: `grampay_prepare_cashout` issues a cryptographically signed JWT token with a 5-minute expiry. Prepared transactions survive server restarts and scale horizontally without needing Redis.
+* **Flexible Authentication**: Authentication accepts `Authorization: Bearer <token>` headers or `?token=<token>` URL query parameters to support Claude's connector UI natively.
+* **Strict Parameter Safeguards**: Max cashout bounds enforcement (`GRAMPAY_MAX_CASHOUT_USD`), parameter validation, and anti-wallet provider filtering for real bank payouts.
 
-For full architectural breakdown and roadmap, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+---
+
+## 📄 License
+
+MIT © [Superteam Nigeria](https://superteam.fun)
