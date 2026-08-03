@@ -4,7 +4,6 @@ export interface PendingToken {
     bank_name: string;
     bank_account: string;
     timestamp: string;
-    expires_at: string;
 }
 export interface CompletedTx {
     amount_usd: number;

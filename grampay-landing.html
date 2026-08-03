@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GramPay — Crypto to Naira, from inside a conversation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F3EFE3;
+    --paper-raised: #FBF9F2;
+    --ink: #16241C;
+    --ink-soft: #4B5A50;
+    --ink-faint: #8A9389;
+    --naira: #0F5132;
+    --naira-bright: #1C7A4B;
+    --signal: #5B3DF6;
+    --signal-soft: #EDE9FE;
+    --amber: #A8752A;
+    --rule: #D9D2BD;
+    --rule-strong: #C3BA9D;
+    --radius: 3px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background: #E4DDC8;
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection { background: var(--signal-soft); color: var(--ink); }
+
+  a { color: var(--naira); text-decoration: none; border-bottom: 1px solid currentColor; }
+  a:hover { color: var(--naira-bright); }
+  a:focus-visible, button:focus-visible {
+    outline: 2px solid var(--signal);
+    outline-offset: 3px;
+  }
+
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+
+  .sheet {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 0 28px;
+  }
+
+  .perf {
+    height: 14px;
+    background: radial-gradient(circle at center, #E4DDC8 4.5px, transparent 4.6px) repeat-x;
+    background-size: 22px 14px;
+    background-position: center;
+  }
+  .perf-top { transform: translateY(-7px); }
+  .receipt-wrap { background: var(--paper); }
+
+  header.sheet {
+    padding-top: 40px;
+    padding-bottom: 20px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    border-bottom: 1px dashed var(--rule-strong);
+  }
+  .brand {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 1.15rem;
+    letter-spacing: -0.01em;
+  }
+  .brand-mark { color: var(--naira); }
+  nav.header-links { display: flex; gap: 22px; font-size: 0.85rem; }
+  nav.header-links a { border-bottom: none; color: var(--ink-soft); }
+  nav.header-links a:hover { color: var(--naira); }
+
+  .hero { padding-top: 56px; padding-bottom: 40px; }
+  .eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+  .eyebrow::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--naira); display: inline-block; }
+  h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: clamp(2rem, 5vw, 2.9rem);
+    line-height: 1.12;
+    letter-spacing: -0.015em;
+    margin: 0 0 20px;
+    max-width: 15ch;
+  }
+  h1 em { font-style: normal; color: var(--naira); }
+  .lede { font-size: 1.08rem; color: var(--ink-soft); max-width: 46ch; margin: 0 0 34px; }
+  .lede strong { color: var(--ink); font-weight: 600; }
+
+  .cta-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+  .btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.82rem;
+    padding: 12px 20px;
+    border-radius: var(--radius);
+    border: 1px solid var(--ink);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    background: none;
+  }
+  .btn-primary { background: var(--naira); color: var(--paper-raised); border-color: var(--naira); }
+  .btn-primary:hover { background: var(--naira-bright); border-color: var(--naira-bright); color: var(--paper-raised); }
+  .btn-ghost { color: var(--ink); border-bottom: none; }
+  .btn-ghost:hover { background: var(--paper-raised); color: var(--ink); }
+
+  .ledger {
+    margin-top: 46px;
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: 6px;
+    padding: 22px 24px 20px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.86rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 18px 40px -22px rgba(22,36,28,0.55);
+  }
+  .ledger::before {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(115deg, transparent 40%, rgba(91,61,246,0.10) 55%, transparent 70%);
+    pointer-events: none;
+  }
+  .ledger-head {
+    display: flex; justify-content: space-between; align-items: center;
+    color: #8FA396;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed #33463A;
+  }
+  .ledger-row { display: flex; justify-content: space-between; padding: 4px 0; }
+  .ledger-key { color: #8FA396; }
+  .ledger-val { color: var(--paper); }
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 2px 9px 2px 7px;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    background: rgba(255,255,255,0.08);
+  }
+  .status-pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; }
+  .status-pending::before { background: var(--amber); }
+  .status-pending { color: #E0B876; }
+  .status-success::before { background: #4ADE80; }
+  .status-success { color: #86EFAC; }
+  .cursor-blink { animation: blink 1s steps(1) infinite; color: var(--signal); }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .status-pill.stamp-pop { animation: stampPop 0.55s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes stampPop {
+    0% { transform: scale(0.55) rotate(-8deg); opacity: 0.3; }
+    55% { transform: scale(1.18) rotate(2deg); opacity: 1; }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  }
+  .status-check {
+    display: inline-block;
+    margin-left: 5px;
+    opacity: 0;
+    transform: scale(0.4);
+    color: #4ADE80;
+  }
+  .status-check.show {
+    opacity: 1;
+    transform: scale(1);
+    transition: opacity 0.3s ease, transform 0.3s cubic-bezier(.34,1.56,.64,1);
+  }
+
+  section.sheet { padding-top: 52px; padding-bottom: 8px; }
+  .section-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 22px; }
+  .section-num { font-family: 'IBM Plex Mono', monospace; color: var(--ink-faint); font-size: 0.82rem; }
+  h2 { font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; font-weight: 600; margin: 0; letter-spacing: -0.01em; }
+  .rule { border: none; border-top: 1px dashed var(--rule-strong); margin: 48px 0 0; }
+  p.body-text { color: var(--ink-soft); max-width: 58ch; }
+
+  .line-items { margin-top: 8px; }
+  .line-item { display: flex; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--rule); transition: transform 0.2s ease; }
+  .line-item:hover { transform: translateX(4px); }
+  .line-item:first-child { border-top: 1px solid var(--rule); }
+  .line-num { font-family: 'IBM Plex Mono', monospace; color: var(--naira); font-size: 0.85rem; padding-top: 2px; min-width: 24px; }
+  .line-item h3 { font-family: 'Space Grotesk', sans-serif; font-size: 1.02rem; font-weight: 600; margin: 0 0 4px; }
+  .line-item p { margin: 0; color: var(--ink-soft); font-size: 0.95rem; }
+
+  .code-block {
+    background: var(--ink);
+    color: #D7E4DA;
+    border-radius: 6px;
+    padding: 18px 20px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.82rem;
+    overflow-x: auto;
+    margin: 18px 0;
+    line-height: 1.7;
+  }
+  .code-block .muted { color: #63776A; }
+  .code-block .signal { color: #A692FF; }
+  .code-block .str { color: #9AD8B4; }
+
+  .tool-list { display: grid; gap: 10px; margin: 20px 0; }
+  .tool {
+    display: flex; gap: 14px; align-items: flex-start;
+    padding: 14px 16px;
+    background: var(--paper-raised);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    transition: transform 0.2s ease;
+  }
+  .tool:hover { transform: translateX(4px); }
+  .tool-name { font-family: 'IBM Plex Mono', monospace; font-size: 0.84rem; color: var(--naira); white-space: nowrap; padding-top: 1px; }
+  .tool-desc { font-size: 0.9rem; color: var(--ink-soft); }
+
+  .callout {
+    border-left: 3px solid var(--signal);
+    background: var(--signal-soft);
+    padding: 14px 18px;
+    border-radius: 0 var(--radius) var(--radius) 0;
+    font-size: 0.9rem;
+    color: #3A2B8A;
+    margin: 20px 0;
+  }
+  .callout strong { color: #2A1D6E; }
+
+  table.ledger-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.9rem; }
+  .ledger-table th {
+    text-align: left;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    padding: 0 12px 10px 0;
+    border-bottom: 1px solid var(--rule-strong);
+    font-weight: 500;
+  }
+  .ledger-table td { padding: 13px 12px 13px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  .provider-name { font-weight: 600; font-family: 'Space Grotesk', sans-serif; }
+  .tag { display: inline-flex; align-items: center; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 0.74rem; padding: 3px 9px; border-radius: 20px; }
+  .tag::before { content: ""; width: 6px; height: 6px; border-radius: 50%; }
+  .tag-live { background: #E4F3E9; color: #1C7A4B; }
+  .tag-live::before { background: #1C7A4B; }
+  .tag-blocked { background: #F5E9DC; color: var(--amber); }
+  .tag-blocked::before { background: var(--amber); }
+
+  .roadmap { position: relative; padding-left: 28px; margin-top: 8px; }
+  .roadmap::before { content: ""; position: absolute; left: 5px; top: 6px; bottom: 6px; width: 1px; background: var(--rule-strong); }
+  .stage { position: relative; padding-bottom: 28px; }
+  .stage::before { content: ""; position: absolute; left: -28px; top: 4px; width: 11px; height: 11px; border-radius: 50%; background: var(--paper); border: 2px solid var(--ink-faint); }
+  .stage.active::before { border-color: var(--naira); background: var(--naira); animation: pulse-dot 2.2s ease-in-out infinite; }
+  @keyframes pulse-dot {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(15,81,50,0.35); }
+    50% { box-shadow: 0 0 0 6px rgba(15,81,50,0); }
+  }
+  .stage h4 { font-family: 'Space Grotesk', sans-serif; font-size: 0.98rem; margin: 0 0 4px; }
+  .stage p { margin: 0; color: var(--ink-soft); font-size: 0.9rem; }
+  .stage .stage-tag { font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; color: var(--ink-faint); }
+
+  .disclosure { background: var(--paper-raised); border: 1px solid var(--rule); border-radius: var(--radius); padding: 18px 20px; margin-top: 14px; }
+  .disclosure ul { margin: 8px 0 0; padding-left: 18px; color: var(--ink-soft); font-size: 0.9rem; }
+  .disclosure li { margin-bottom: 5px; }
+
+  footer { margin-top: 60px; background: var(--ink); color: #9BAA9F; padding: 44px 0 36px; }
+  footer .sheet { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 24px; }
+  footer .brand { color: var(--paper); }
+  footer .brand-mark { color: #6FDB9C; }
+  footer p { font-size: 0.85rem; max-width: 40ch; margin: 10px 0 0; }
+  footer .foot-links { display: flex; gap: 18px; font-size: 0.85rem; }
+  footer a { color: #C7D3CA; border-bottom-color: #445048; }
+  footer a:hover { color: #fff; }
+  .foot-print { font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; color: #5E6E63; margin-top: 30px; padding-top: 20px; border-top: 1px dashed #33463A; }
+
+  /* ---- Motion: reveal states ---- */
+  .reveal-init { opacity: 0; transform: translateY(20px); }
+  .reveal-init.in-view {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.7s cubic-bezier(.16,.84,.44,1), transform 0.7s cubic-bezier(.16,.84,.44,1);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reveal-init { opacity: 1 !important; transform: none !important; transition: none !important; }
+    .status-pill.stamp-pop { animation: none !important; }
+    .stage.active::before { animation: none !important; }
+    .cursor-blink { animation: none !important; }
+  }
+
+  @media (max-width: 600px) {
+    header.sheet { flex-direction: column; align-items: flex-start; gap: 10px; }
+    nav.header-links { gap: 16px; }
+    footer .sheet { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<div class="receipt-wrap">
+  <div class="perf perf-top"></div>
+
+  <header class="sheet">
+    <div class="brand"><span class="brand-mark">Gram</span>Pay</div>
+    <nav class="header-links">
+      <a href="#connect">Connect</a>
+      <a href="#providers">Providers</a>
+      <a href="#roadmap">Roadmap</a>
+      <a href="https://github.com/TopeGramms/grampay-mcp-server">GitHub</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero sheet">
+      <div class="eyebrow reveal-init hero-anim">MCP Connector · Crypto → NGN</div>
+      <h1 class="reveal-init hero-anim">Tell your AI to cash out.<br>It reaches a <em>Nigerian bank account.</em></h1>
+      <p class="lede reveal-init hero-anim">
+        GramPay is an open MCP server that gives Claude — or any MCP-capable agent —
+        a real tool for settling crypto to Naira. <strong>Built solo, tested end-to-end,
+        live today.</strong>
+      </p>
+      <div class="cta-row reveal-init hero-anim">
+        <button class="btn btn-primary" type="button">Connect in Claude →</button>
+        <a class="btn btn-ghost" href="https://github.com/TopeGramms/grampay-mcp-server">View source</a>
+      </div>
+
+      <div class="ledger reveal-init hero-anim" role="group" aria-label="Example transaction status">
+        <div class="ledger-head">
+          <span>grampay_mcp · tool_call</span>
+          <span>live demo</span>
+        </div>
+        <div class="ledger-row">
+          <span class="ledger-key">tool</span>
+          <span class="ledger-val">cashout_to_ngn</span>
+        </div>
+        <div class="ledger-row">
+          <span class="ledger-key">amount</span>
+          <span class="ledger-val">₦ 500.00</span>
+        </div>
+        <div class="ledger-row">
+          <span class="ledger-key">reference</span>
+          <span class="ledger-val" id="ref-val">test-1785…</span>
+        </div>
+        <div class="ledger-row">
+          <span class="ledger-key">status</span>
+          <span class="ledger-val" id="status-val">
+            <span class="status-pill status-pending" id="status-pill">
+              <span id="status-text">PENDING</span><span class="cursor-blink">_</span>
+            </span><span class="status-check" id="status-check">✓</span>
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <hr class="rule sheet" style="max-width:760px; margin-left:auto; margin-right:auto;">
+
+    <section class="sheet" id="what">
+      <div class="section-head reveal-init">
+        <span class="section-num">01</span>
+        <h2>What it actually does</h2>
+      </div>
+      <p class="body-text">
+        Off-ramping crypto to Naira usually means leaving the conversation, opening an
+        exchange, and manually walking through a withdrawal form. GramPay collapses that
+        into a tool call an AI agent can make directly — the same connector pattern
+        MoonPay's PayBox uses to let Claude and ChatGPT move money, applied to the
+        specific problem of getting crypto into a Nigerian bank account.
+      </p>
+
+      <div class="line-items">
+        <div class="line-item reveal-init">
+          <span class="line-num">01</span>
+          <div>
+            <h3>Balance check</h3>
+            <p>The agent reads your available crypto balance before proposing a cash-out amount.</p>
+          </div>
+        </div>
+        <div class="line-item reveal-init">
+          <span class="line-num">02</span>
+          <div>
+            <h3>Cash out to NGN</h3>
+            <p>A single tool call initiates the transfer — crypto converted, Naira sent to a named bank account.</p>
+          </div>
+        </div>
+        <div class="line-item reveal-init">
+          <span class="line-num">03</span>
+          <div>
+            <h3>Status tracking</h3>
+            <p>The agent (or you) can poll the transaction reference until it settles.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="sheet" id="connect">
+      <div class="section-head reveal-init">
+        <span class="section-num">02</span>
+        <h2>Connect it</h2>
+      </div>
+      <p class="body-text">
+        GramPay runs as a remote MCP server over Streamable HTTP. Add it as a custom
+        connector and the three tools below become available inside your conversation.
+      </p>
+
+      <div class="code-block reveal-init"><span class="muted"># Add as a custom connector</span><br>
+<span class="signal">URL</span>  <span class="str">https://[your-deployment].up.railway.app/mcp</span><br>
+<span class="signal">Auth</span> <span class="str">Bearer &lt;token&gt;</span></div>
+
+      <div class="callout reveal-init">
+        <strong>Status:</strong> the connector endpoint is built and tested locally.
+        Public deployment is the next step before this URL goes live — check the
+        <a href="https://github.com/TopeGramms/grampay-mcp-server">repo</a> for current status.
+      </div>
+
+      <div class="tool-list">
+        <div class="tool reveal-init">
+          <span class="tool-name">check_balance</span>
+          <span class="tool-desc">Returns available balance across supported tokens, with a fiat equivalent.</span>
+        </div>
+        <div class="tool reveal-init">
+          <span class="tool-name">cashout_to_ngn</span>
+          <span class="tool-desc">Initiates a crypto-to-Naira transfer to a named bank account.</span>
+        </div>
+        <div class="tool reveal-init">
+          <span class="tool-name">check_transfer_status</span>
+          <span class="tool-desc">Looks up the current state of a transfer by its reference.</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="sheet" id="providers">
+      <div class="section-head reveal-init">
+        <span class="section-num">03</span>
+        <h2>Provider ledger</h2>
+      </div>
+      <p class="body-text">
+        Three off-ramp providers were evaluated on fee and access. Access, not fee, ended
+        up deciding what's live today — this table is kept honest on purpose.
+      </p>
+
+      <table class="ledger-table reveal-init">
+        <thead>
+          <tr><th>Provider</th><th>Fee</th><th>Access requirement</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="provider-name">IvoryPay</td>
+            <td class="mono">1%</td>
+            <td>Personal KYC</td>
+            <td><span class="tag tag-live">Live</span></td>
+          </tr>
+          <tr>
+            <td class="provider-name">Breet</td>
+            <td class="mono">0.5%</td>
+            <td>Full company KYB</td>
+            <td><span class="tag tag-blocked">Blocked</span></td>
+          </tr>
+          <tr>
+            <td class="provider-name">Quidax Ramp</td>
+            <td class="mono">₦200 flat</td>
+            <td>Full company KYB</td>
+            <td><span class="tag tag-blocked">Blocked</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="sheet" id="roadmap">
+      <div class="section-head reveal-init">
+        <span class="section-num">04</span>
+        <h2>Roadmap</h2>
+      </div>
+
+      <div class="roadmap">
+        <div class="stage active reveal-init">
+          <span class="stage-tag">NOW</span>
+          <h4>Solo operator, single provider</h4>
+          <p>Live on IvoryPay. One user — the operator is also the fund owner.</p>
+        </div>
+        <div class="stage reveal-init">
+          <span class="stage-tag">NEXT</span>
+          <h4>Public connector deployment</h4>
+          <p>Streamable HTTP server deployed with token auth, addable as a real Claude connector.</p>
+        </div>
+        <div class="stage reveal-init">
+          <span class="stage-tag">THEN</span>
+          <h4>Incorporation</h4>
+          <p>Unlocks Breet and Quidax Ramp access, and lower fees at volume.</p>
+        </div>
+        <div class="stage reveal-init">
+          <span class="stage-tag">LATER</span>
+          <h4>Multi-user, prepare/approve/execute</h4>
+          <p>A confirmation step between the AI proposing a transfer and it actually executing.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="sheet" id="honest" style="padding-bottom: 8px;">
+      <div class="section-head reveal-init">
+        <span class="section-num">05</span>
+        <h2>Where things stand, plainly</h2>
+      </div>
+      <div class="disclosure reveal-init">
+        <strong>Current limitations:</strong>
+        <ul>
+          <li>Validated in IvoryPay test mode end-to-end; live-key transactions are the next real-money milestone.</li>
+          <li>No multi-user support yet — there's no approval layer between an agent's request and execution.</li>
+          <li>Pre-incorporation, which is the reason Breet and Quidax aren't connected yet.</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="sheet">
+      <div>
+        <div class="brand"><span class="brand-mark">Gram</span>Pay</div>
+        <p>An MCP server for crypto-to-Naira cash-outs. Built solo in Nigeria, part of the Superteam Nigeria ecosystem.</p>
+      </div>
+      <div class="foot-links">
+        <a href="https://github.com/TopeGramms/grampay-mcp-server">GitHub</a>
+        <a href="https://x.com/TopeGramms">X</a>
+      </div>
+    </div>
+    <div class="sheet foot-print">grampay-mcp-server · solo-operator build · test-mode validated</div>
+  </footer>
+
+  <div class="perf"></div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // ---- Hero entrance: staggered fade/rise on load ----
+    var heroEls = document.querySelectorAll('.hero-anim');
+    heroEls.forEach(function (el, i) {
+      if (reduceMotion) { el.classList.add('in-view'); return; }
+      el.style.transitionDelay = (i * 90) + 'ms';
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () { el.classList.add('in-view'); });
+      });
+    });
+
+    // ---- Scroll reveal for everything else ----
+    var scrollEls = document.querySelectorAll('.reveal-init:not(.hero-anim)');
+    if (reduceMotion || !('IntersectionObserver' in window)) {
+      scrollEls.forEach(function (el) { el.classList.add('in-view'); });
+    } else {
+      var counters = new WeakMap();
+      scrollEls.forEach(function (el) {
+        var parent = el.parentElement;
+        var idx = counters.get(parent) || 0;
+        el.style.transitionDelay = Math.min(idx * 70, 280) + 'ms';
+        counters.set(parent, idx + 1);
+      });
+
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('in-view');
+            io.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+
+      scrollEls.forEach(function (el) { io.observe(el); });
+    }
+
+    // ---- Ledger cycle: the "stamp of approval" moment ----
+    var pill = document.getElementById('status-pill');
+    var text = document.getElementById('status-text');
+    var ref = document.getElementById('ref-val');
+    var check = document.getElementById('status-check');
+
+    function randomRef() {
+      return 'test-' + Math.floor(1780000000 + Math.random() * 9000000);
+    }
+
+    function runCycle() {
+      pill.classList.remove('status-success', 'stamp-pop');
+      check.classList.remove('show');
+      pill.classList.add('status-pending');
+      text.textContent = 'PENDING';
+      ref.textContent = randomRef() + '…';
+
+      setTimeout(function () {
+        pill.classList.remove('status-pending');
+        pill.classList.add('status-success');
+        text.textContent = 'SUCCESS';
+
+        if (!reduceMotion) {
+          void pill.offsetWidth; // restart animation
+          pill.classList.add('stamp-pop');
+          setTimeout(function () { check.classList.add('show'); }, 180);
+        } else {
+          check.classList.add('show');
+        }
+      }, 2200);
+    }
+
+    runCycle();
+    setInterval(runCycle, 6000);
+  });
+</script>
+
+</body>
+</html>

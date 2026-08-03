@@ -5,6 +5,7 @@ export declare const CONFIG: {
     MAX_CASHOUT_USD: number;
     USD_TO_NGN_RATE: number;
     IVORYPAY_SECRET_KEY: string | undefined;
+    IVORYPAY_PUBLIC_KEY: string | undefined;
     IVORYPAY_ENV: string;
 };
 //# sourceMappingURL=config.d.ts.map

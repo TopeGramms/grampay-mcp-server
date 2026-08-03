@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: grampay-mcp-server
+    runtime: node
+    region: oregon
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: node build/httpServer.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        generateValue: false
+        value: "10000"
+      # Set these in the Render dashboard → Environment → Add Variable
+      # (do NOT commit secrets to this file)
+      - key: MCP_AUTH_TOKEN
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: IVORYPAY_SECRET_KEY
+        sync: false
+      - key: IVORYPAY_PUBLIC_KEY
+        sync: false
+      - key: IVORYPAY_ENV
+        value: test
+      - key: GRAMPAY_MODE
+        value: live
+      - key: GRAMPAY_MAX_CASHOUT_USD
+        value: "1000"
+      - key: USD_TO_NGN_RATE
+        value: "1650"

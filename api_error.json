@@ -1,1 +1,0 @@
-{"success":false,"message":"Invalid Data","statusCode":400,"errors":["mode must be one of the following values: API, CHECKOUT","reference must be a UUID","crypto must be one of $USDT, USDC, SOL, BTC, ETH, TUSD, MATIC, PYUSD, IVRY, STRK"],"timestamp":"7/28/2026, 7:50:55 PM","path":"/api/v1/transactions","method":"POST"}

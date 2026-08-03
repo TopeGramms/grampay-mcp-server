@@ -1,82 +1,117 @@
 # GramPay MCP Server
 
-A robust Model Context Protocol (MCP) server for converting fiat payouts (crypto/USDC liquidity to Nigerian Naira) using IvoryPay APIs. 
+[![Superteam Nigeria](https://img.shields.io/badge/Superteam-Nigeria-emerald)](https://superteam.fun)
+[![MCP Protocol](https://img.shields.io/badge/Protocol-MCP%20v1.2-purple)](https://modelcontextprotocol.io)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-## Overview
+An open-source **Model Context Protocol (MCP)** server enabling AI Agents (Claude, ChatGPT, Cursor, Autonomous Workers) to execute real-time crypto liquidity cashouts directly into Nigerian Bank Accounts (NGN).
 
-GramPay acts as a specialized AI payment agent via Claude, Cursor, or ChatGPT using built-in MCP tools. It allows conversational AI models to handle bank lookups, prepare payout limits, execute transactions via IvoryPay, and check live bank transfer statuses.
+GramPay serves as the payment execution bridge between LLM function calling and licensed African payment infrastructure via **IvoryPay**.
 
-The project is currently successfully integrated with **IvoryPay API** and handles the rigorous valid-UUID and standard strict verification constraints cleanly.
+---
 
-## Quick Start
+## 🌟 Grant Reviewer Summary
 
-### Prerequisites
-- Node.js 18+
-- npm
+### Key Value Proposition
+African creators and developers routinely earn in global digital assets (USDC, USDT, SOL), but face significant friction converting liquidity to spendable local currency (NGN). GramPay empowers AI Agents to perform compliant, automated bank payouts on behalf of users in a single conversational prompt.
 
-### Installation
+### Current Implementation Status
+* **Provider Integration:** Direct integration with **IvoryPay API** (supporting standard NGN fiat payouts).
+* **Testnet Ready:** Confirmed end-to-end execution flow (Transaction Creation → Payment Simulation → Status Verification).
+* **Security Guardrails:** Safety limits (`MAX_CASHOUT_USD`), parameter enforcement, and environment isolation.
+* **Bank Directory Matching:** Built-in resolution catalog mapping friendly bank names (e.g., "Access Bank", "GTB") to official CBN bank codes, with anti-wallet filter protections.
+
+---
+
+## 🛠️ MCP Tools Reference
+
+The server exposes 9 specialized tools to MCP clients:
+
+| Tool | Purpose | Required Inputs |
+| :--- | :--- | :--- |
+| `cashout_to_ngn` | Core tool to execute payout in NGN from USD/NGN amounts | `accountNumber`, `reference`, `firstName`, `lastName`, `email` |
+| `check_transfer_status` | Query live status of a pending/completed payout | `reference` |
+| `grampay_lookup_bank` | Local directory search for Nigerian banks & codes | *Optional:* `query` |
+| `list_supported_banks` | Fetch live supported settlement banks from IvoryPay | None |
+| `grampay_get_balance` | Check current merchant treasury liquidity balance | None |
+| `grampay_get_config` | Retrieve server runtime configuration and limits | None |
+| `create_transaction` | Step 1/3: Low-level transaction creation | `amount`, `email`, `firstName`, `lastName`, `reference` |
+| `simulate_payment` | Step 2/3: Test-mode payment simulation trigger | `reference` |
+| `verify_transaction` | Step 3/3: Direct status lookup from IvoryPay endpoint | `reference` |
+
+---
+
+## ⚡ Quick Start
+
+### 1. Prerequisites
+* **Node.js**: `v18.0.0` or higher
+* **npm**: `v9.0.0` or higher
+
+### 2. Installation & Build
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/TopeGramms/grampay-mcp-server.git
 cd grampay-mcp-server
 npm install
 npm run build
 ```
 
-### Configuration
+### 3. Environment Configuration
 
-Create a `.env` file in the root directory:
+Copy the sample configuration file and add your credentials:
 
 ```bash
-GRAMPAY_MODE=mock                        # System mode (mock vs live)
-GRAMPAY_DEFAULT_BANK_NAME=Access Bank    # Fallback bank Name
-GRAMPAY_DEFAULT_BANK_ACCOUNT=0785351096  # Fallback Bank Account
-GRAMPAY_MAX_CASHOUT_USD=1000             # Safety thresholds
-USD_TO_NGN_RATE=1650                     # Central exchange rate
+cp .env.example .env
+```
 
-# IvoryPay Settings
-IVORYPAY_SECRET_KEY=YOUR_IVORYPAY_API_KEY
+Configure `.env`:
+
+```env
+IVORYPAY_SECRET_KEY=sk_test_your_key_here
+IVORYPAY_PUBLIC_KEY=pk_test_your_key_here
 IVORYPAY_ENV=test
+
+GRAMPAY_MODE=live
+GRAMPAY_MAX_CASHOUT_USD=1000
+USD_TO_NGN_RATE=1650
 ```
 
-### Running the Server
+### 4. Mounting to Claude Desktop / Cursor
+
+Add GramPay to your MCP settings file (e.g., `claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "grampay": {
+      "command": "node",
+      "args": ["c:/path/to/grampay-mcp-server/build/index.js"],
+      "env": {
+        "IVORYPAY_SECRET_KEY": "sk_test_your_key_here",
+        "IVORYPAY_ENV": "test",
+        "GRAMPAY_MODE": "live"
+      }
+    }
+  }
+}
+```
+
+---
+
+## 🧪 Testing the Integration
+
+Run the bundled MCP client test script to perform a full execution loop:
 
 ```bash
-npm run dev
+node scripts/call-ivorypay-tool.mjs
 ```
 
-The server starts in stdio mode, ready to be mounted locally on an MCP client like Claude Desktop, Cursor, or Cline.
+---
 
-## MCP Tools
+## 🔒 Security & Architecture
 
-| Tool | Description |
-|------|-------------|
-| `grampay_get_config` | Get current mode, limits, and default bank details |
-| `grampay_get_balance` | Check IvoryPay Merchant balance |
-| `grampay_lookup_bank` | Search supported real banks from the IvoryPay catalog |
-| `list_supported_banks`| List all valid IvoryPay support Bank IDs |
-| `cashout_to_ngn` | Initiate a bank payout in NGN to a real bank account using `amount` or `amount_usd` |
-| `create_transaction` | Step 1/3 explicit checkout creation (Strict IvoryPay /transactions integration) |
-| `simulate_payment` | Step 2/3 Simulate completion of a created transaction in `test` environment |
-| `verify_transaction` | Step 3/3 Verify the transaction status precisely by fetching standard JSON |
-| `check_transfer_status` | Fast wrapper to check the status of a crypto-to-NGN reference ID |
+* **Strict Input Validation:** All API calls enforce UUID reference structures, positive numerical bounds, and required identity fields.
+* **Environment Safeguards:** Payment simulation (`simulate_payment`) is strictly restricted to test environments (`IVORYPAY_ENV=test`).
+* **Zero Secret Leakage:** API credentials are strictly read from environment variables; zero hardcoded fallback accounts exist in the codebase.
 
-## Example Usage
-
-In Claude/Cursor chat:
-
-```text
-Please create an IvoryPay checkout for a hardekhalu@gmail.com for 5000 NGN.
-```
-
-The AI will intelligently choose `create_transaction`, properly generate a UUID reference, formulate the Strict Mode payload requirement, and process your request!
-
-## Security Notes
-
-1. **Credentials Management:** The `IVORYPAY_SECRET_KEY` holds absolute authority over funds. It should **never** be committed to version control (`.env` is in `.gitignore`).
-2. **API Type Validations**: The index router drops incorrect types *before* hitting APIs to prevent injection attacks and cascading script failures.
-
-## Next Target
-
-- Integrate into an independent conversational WhatsApp bot Gateway.
-- Implement production caching to optimize IvoryPay API rate limits on larger workloads.
+For full architectural breakdown and roadmap, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).

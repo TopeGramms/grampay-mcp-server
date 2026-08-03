@@ -3,6 +3,8 @@ build/
 .env
 .env.*
 *.log
+api_error.json
+error_dump.txt
 .DS_Store
 .vscode/
 .idea/

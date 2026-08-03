@@ -111,6 +111,9 @@ export const TOOLS = [
         amount: { type: "number", description: "Amount in NGN" },
         amount_usd: { type: "number", description: "Amount in USD to convert to NGN" },
         exchange_rate: { type: "number", description: "Optional USD -> NGN rate, defaults to env value" },
+        firstName: { type: "string", description: "Recipient first name" },
+        lastName: { type: "string", description: "Recipient last name" },
+        email: { type: "string", description: "Recipient email address" },
         recipientName: { type: "string", description: "Bank account holder name" },
         accountNumber: { type: "string", description: "Bank account number" },
         bankCode: { type: "string", description: "Bank code (optional if bankName is provided)" },
@@ -118,7 +121,7 @@ export const TOOLS = [
         reference: { type: "string", description: "Unique transaction reference" },
         narration: { type: "string", description: "Optional payment description" },
       },
-      required: ["accountNumber", "reference"],
+      required: ["accountNumber", "reference", "firstName", "lastName", "email"],
     },
   },
   {

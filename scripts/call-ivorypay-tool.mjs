@@ -22,7 +22,7 @@ async function main() {
     name: "create_transaction",
     arguments: {
       amount: 5000,
-      email: "hardekhalu@gmail.com",
+      email: "demo@grampay.org",
       firstName: "Adekalu",
       lastName: "Temitope",
       type: "FIAT",

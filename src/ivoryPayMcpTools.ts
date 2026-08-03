@@ -4,8 +4,13 @@ import { CONFIG } from "./config.js";
 import { IvoryPayApiError, IvoryPayClient, type CreateTransactionParams } from "./ivoryPayClient.js";
 import crypto from "crypto";
 
+let clientInstance: IvoryPayClient | null = null;
+
 export function getIvoryPayClient() {
-  return new IvoryPayClient();
+  if (!clientInstance) {
+    clientInstance = new IvoryPayClient();
+  }
+  return clientInstance;
 }
 
 type BankDirectoryEntry = {
@@ -89,31 +94,37 @@ function resolveNgNAmount(args: Record<string, unknown>) {
       ? args.exchangeRate
       : CONFIG.USD_TO_NGN_RATE;
 
+  let computedUsd: number;
+  let computedNgn: number;
+
   if (amountNgn !== undefined) {
     if (amountNgn <= 0) {
       throw new Error("Amount must be positive");
     }
-
-    return { amount: amountNgn };
-  }
-
-  if (amountUsd !== undefined) {
+    computedNgn = amountNgn;
+    computedUsd = amountNgn / exchangeRate;
+  } else if (amountUsd !== undefined) {
     if (amountUsd <= 0) {
       throw new Error("Amount must be positive");
     }
-
     if (!Number.isFinite(exchangeRate) || exchangeRate <= 0) {
       throw new Error("Invalid exchange rate");
     }
-
-    return {
-      amount: Math.round(amountUsd * exchangeRate),
-      amountUsd,
-      exchangeRate,
-    };
+    computedUsd = amountUsd;
+    computedNgn = Math.round(amountUsd * exchangeRate);
+  } else {
+    throw new Error("Provide either amount (NGN) or amount_usd");
   }
 
-  throw new Error("Provide either amount (NGN) or amount_usd");
+  if (computedUsd > CONFIG.MAX_CASHOUT_USD) {
+    throw new Error(`Amount exceeds maximum allowable cashout limit of $${CONFIG.MAX_CASHOUT_USD} USD`);
+  }
+
+  return {
+    amount: computedNgn,
+    amountUsd: computedUsd,
+    exchangeRate,
+  };
 }
 
 async function resolveBankCode(args: Record<string, unknown>) {
@@ -225,9 +236,20 @@ export async function lookupBank(args: Record<string, unknown>) {
 export async function cashoutToNGN(args: Record<string, unknown>) {
   try {
     const normalized = resolveNgNAmount(args);
-    const firstName = typeof args.firstName === "string" ? args.firstName : "Test";
-    const lastName = typeof args.lastName === "string" ? args.lastName : "User";
-    const email = typeof args.email === "string" ? args.email : "test@example.com";
+
+    if (typeof args.firstName !== "string" || !args.firstName.trim()) {
+      throw new Error("firstName is required");
+    }
+    if (typeof args.lastName !== "string" || !args.lastName.trim()) {
+      throw new Error("lastName is required");
+    }
+    if (typeof args.email !== "string" || !args.email.trim()) {
+      throw new Error("email is required");
+    }
+
+    const firstName = args.firstName.trim();
+    const lastName = args.lastName.trim();
+    const email = args.email.trim();
     const reference = typeof args.reference === "string" ? args.reference : crypto.randomUUID();
 
     if (CONFIG.MODE === "mock") {
@@ -268,8 +290,10 @@ export async function cashoutToNGN(args: Record<string, unknown>) {
       reference,
     } as CreateTransactionParams);
 
-    // Step 2: Simulate payment (test mode only)
-    await getIvoryPayClient().simulatePayment(txn.reference);
+    // Step 2: Simulate payment (test environment only)
+    if (CONFIG.IVORYPAY_ENV === "test") {
+      await getIvoryPayClient().simulatePayment(txn.reference);
+    }
 
     // Step 3: Verify transaction
     const verified = await getIvoryPayClient().verifyTransaction(txn.reference);

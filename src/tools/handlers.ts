@@ -1,4 +1,5 @@
 import { CONFIG } from "../config.js";
+import { signPrepareToken, verifyPrepareToken } from "../tokenStore.js";
 
 export interface PendingToken {
   amount_usd: number;
@@ -6,7 +7,7 @@ export interface PendingToken {
   bank_name: string;
   bank_account: string;
   timestamp: string;
-  expires_at: string;
+  // expires_at is encoded inside the JWT itself (5-minute expiry)
 }
 
 export interface CompletedTx {
@@ -17,22 +18,13 @@ export interface CompletedTx {
   status: string;
 }
 
-// Mock state (in-memory for Phase 0)
+// Mock state (in-memory for Phase 0 / mock mode)
+// Note: balance_usd and completed_txs are only used in mock mode and will reset on restart.
+// prepare_tokens are now stateless JWTs — no Map needed.
 const mockState = {
-  balance_usd: 250.0, // Mock USDC balance
-  pending_tokens: new Map<string, PendingToken>(),
+  balance_usd: 250.0,
   completed_txs: new Map<string, CompletedTx>(),
 };
-
-// Periodic cleanup of expired tokens
-setInterval(() => {
-  const now = new Date();
-  for (const [token, prep] of mockState.pending_tokens.entries()) {
-    if (new Date(prep.expires_at) < now) {
-      mockState.pending_tokens.delete(token);
-    }
-  }
-}, 60000).unref();
 
 export async function handleGetConfig() {
   return {
@@ -87,17 +79,13 @@ export async function handlePrepareCashout(amountUsd: number) {
     throw new Error(`Insufficient balance. Have $${mockState.balance_usd}`);
   }
 
-  // Generate one-time token
-  const token = `prep_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
-
-  // Store preparation details
-  mockState.pending_tokens.set(token, {
+  // Issue a stateless JWT prepare-token (5-minute expiry baked in)
+  const token = signPrepareToken({
     amount_usd: amountUsd,
     amount_ngn: amountUsd * CONFIG.USD_TO_NGN_RATE,
     bank_name: CONFIG.DEFAULT_BANK_NAME,
     bank_account: CONFIG.DEFAULT_BANK_ACCOUNT,
     timestamp: new Date().toISOString(),
-    expires_at: new Date(Date.now() + 300000).toISOString(), // 5 min expiry
   });
 
   return {
@@ -114,17 +102,8 @@ export async function handlePrepareCashout(amountUsd: number) {
 }
 
 export async function handleExecuteCashout(prepareToken: string) {
-  const prep = mockState.pending_tokens.get(prepareToken);
-
-  if (!prep) {
-    throw new Error("Invalid or expired preparation token");
-  }
-
-  // Check expiry
-  if (new Date(prep.expires_at) < new Date()) {
-    mockState.pending_tokens.delete(prepareToken);
-    throw new Error("Preparation token expired");
-  }
+  // Verify and decode the JWT — throws if expired or tampered
+  const prep = verifyPrepareToken(prepareToken);
 
   // Execute (mock)
   const txId = `tx_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
@@ -136,9 +115,6 @@ export async function handleExecuteCashout(prepareToken: string) {
     timestamp: new Date().toISOString(),
     status: "COMPLETED",
   });
-
-  // Clean up token
-  mockState.pending_tokens.delete(prepareToken);
 
   // Simulate balance deduction
   mockState.balance_usd -= prep.amount_usd;
