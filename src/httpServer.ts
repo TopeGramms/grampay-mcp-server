@@ -60,32 +60,34 @@ app.use(express.json());
 
 function authMiddleware(req: Request, res: Response, next: NextFunction): void {
   if (!MCP_AUTH_TOKEN) {
-    // Auth disabled — warn was already logged at startup
+    // Auth disabled — open access
     next();
     return;
   }
 
+  // 1. Check query parameters (e.g. /mcp?token=YOUR_TOKEN or /mcp?key=YOUR_TOKEN)
+  const queryToken = req.query.token || req.query.auth || req.query.key || req.query.api_key;
+  if (typeof queryToken === "string" && queryToken === MCP_AUTH_TOKEN) {
+    next();
+    return;
+  }
+
+  // 2. Check Authorization header (e.g. Authorization: Bearer YOUR_TOKEN)
   const authHeader = req.headers.authorization;
-  if (!authHeader) {
-    res.status(401).json({
-      error: "Unauthorized",
-      message:
-        "Missing Authorization header. " +
-        "Add 'Authorization: Bearer <your MCP_AUTH_TOKEN>' when registering this connector.",
-    });
-    return;
+  if (authHeader) {
+    const [scheme, token] = authHeader.split(" ");
+    if (scheme === "Bearer" && token === MCP_AUTH_TOKEN) {
+      next();
+      return;
+    }
   }
 
-  const [scheme, token] = authHeader.split(" ");
-  if (scheme !== "Bearer" || token !== MCP_AUTH_TOKEN) {
-    res.status(401).json({
-      error: "Unauthorized",
-      message: "Invalid Bearer token.",
-    });
-    return;
-  }
-
-  next();
+  res.status(401).json({
+    error: "Unauthorized",
+    message:
+      "Unauthorized. Provide your token in the URL (e.g. /mcp?token=YOUR_MCP_AUTH_TOKEN) " +
+      "or in the Authorization header.",
+  });
 }
 
 // ---------------------------------------------------------------------------
