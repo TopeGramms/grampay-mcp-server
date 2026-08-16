@@ -2,9 +2,11 @@ node_modules/
 build/
 .env
 .env.*
+!.env.example
 *.log
 api_error.json
 error_dump.txt
 .DS_Store
 .vscode/
 .idea/
+

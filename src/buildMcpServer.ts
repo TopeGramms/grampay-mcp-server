@@ -24,12 +24,14 @@ import {
   listSupportedBanks,
   getIvoryPayClient,
 } from "./ivoryPayMcpTools.js";
+import { formatErrorReceipt, formatStatusReceipt } from "./formatReceipt.js";
+import type { CreateTransactionParams } from "./ivoryPayClient.js";
 
 export function buildMcpServer(): Server {
   const server = new Server(
     {
       name: "grampay-mcp-server",
-      version: "0.1.0",
+      version: "1.0.0",
     },
     {
       capabilities: {
@@ -92,22 +94,47 @@ export function buildMcpServer(): Server {
           if (typeof args.reference !== "string") throw new Error("reference must be a string");
           result = await checkTransferStatus({ reference: args.reference });
           break;
-        case "create_transaction":
-          result = await getIvoryPayClient().createTransaction(args as any);
+        case "create_transaction": {
+          const params: CreateTransactionParams = {
+            amount: Number(args.amount),
+            email: String(args.email ?? ""),
+            firstName: String(args.firstName ?? ""),
+            lastName: String(args.lastName ?? ""),
+            reference: String(args.reference ?? ""),
+            baseFiat: (args.baseFiat as any) ?? "NGN",
+          };
+          const txn = await getIvoryPayClient().createTransaction(params);
+          result = formatStatusReceipt({
+            reference: txn.reference,
+            status: txn.status ?? "CREATED",
+            amount: txn.amount,
+          });
           break;
-        case "simulate_payment":
+        }
+        case "simulate_payment": {
           if (typeof args.reference !== "string") throw new Error("reference must be a string");
-          result = await getIvoryPayClient().simulatePayment(args.reference);
+          const sim = await getIvoryPayClient().simulatePayment(args.reference);
+          result = formatStatusReceipt({
+            reference: args.reference,
+            status: sim.status ?? "SIMULATED",
+          });
           break;
-        case "verify_transaction":
+        }
+        case "verify_transaction": {
           if (typeof args.reference !== "string") throw new Error("reference must be a string");
-          result = await getIvoryPayClient().verifyTransaction(args.reference);
+          const v = await getIvoryPayClient().verifyTransaction(args.reference);
+          result = formatStatusReceipt({
+            reference: v.reference ?? args.reference,
+            status: v.status ?? "VERIFIED",
+            amount: v.amount,
+            currency: v.currency,
+          });
           break;
+        }
         default:
           throw new Error(`Unknown tool: ${name}`);
       }
 
-      // If the result already has a valid MCP content shape, return it directly
       if (
         result &&
         typeof result === "object" &&
@@ -120,7 +147,6 @@ export function buildMcpServer(): Server {
         };
       }
 
-      // Otherwise wrap the plain object in a text content block
       return {
         content: [
           {
@@ -130,17 +156,10 @@ export function buildMcpServer(): Server {
         ],
       };
     } catch (error) {
-      return {
-        content: [
-          {
-            type: "text",
-            text: `Error: ${error instanceof Error ? error.message : String(error)}`,
-          } as TextContent,
-        ],
-        isError: true,
-      };
+      return formatErrorReceipt(name, error);
     }
   });
 
   return server;
 }
+

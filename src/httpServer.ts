@@ -17,6 +17,8 @@
 import express, { type Request, type Response, type NextFunction } from "express";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { randomUUID } from "crypto";
+import path from "path";
+import fs from "fs";
 import dotenv from "dotenv";
 import { CONFIG } from "./config.js";
 import { buildMcpServer } from "./buildMcpServer.js";
@@ -53,6 +55,12 @@ if (!MCP_AUTH_TOKEN) {
 
 const app = express();
 app.use(express.json());
+
+// Serve static assets (logo, branding)
+const assetsPath = path.join(process.cwd(), "assets");
+if (fs.existsSync(assetsPath)) {
+  app.use("/assets", express.static(assetsPath));
+}
 
 // ---------------------------------------------------------------------------
 // Auth middleware
@@ -96,12 +104,22 @@ function authMiddleware(req: Request, res: Response, next: NextFunction): void {
 // Sessions are short-lived; the transport closes when the SSE stream ends.
 // ---------------------------------------------------------------------------
 
-const sessions = new Map<string, StreamableHTTPServerTransport>();
+const sessions = new Map<string, { transport: StreamableHTTPServerTransport; createdAt: number }>();
 
 function cleanupSession(sessionId: string): void {
   sessions.delete(sessionId);
   console.error(`[session] closed: ${sessionId} (${sessions.size} active)`);
 }
+
+// Periodic cleanup of stale sessions older than 30 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [id, s] of sessions.entries()) {
+    if (now - s.createdAt > 30 * 60 * 1000) {
+      cleanupSession(id);
+    }
+  }
+}, 10 * 60 * 1000);
 
 // ---------------------------------------------------------------------------
 // MCP endpoint
@@ -115,13 +133,13 @@ app.post("/mcp", authMiddleware, async (req: Request, res: Response) => {
 
     if (sessionId && sessions.has(sessionId)) {
       // Existing session — reuse transport
-      transport = sessions.get(sessionId)!;
+      transport = sessions.get(sessionId)!.transport;
     } else {
       // New session — create server + transport
       transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: () => randomUUID(),
         onsessioninitialized: (id) => {
-          sessions.set(id, transport);
+          sessions.set(id, { transport, createdAt: Date.now() });
           console.error(`[session] opened: ${id} (${sessions.size} active)`);
         },
       });
@@ -159,7 +177,7 @@ app.get("/mcp", authMiddleware, async (req: Request, res: Response) => {
   }
 
   try {
-    const transport = sessions.get(sessionId)!;
+    const transport = sessions.get(sessionId)!.transport;
     await transport.handleRequest(req, res);
   } catch (err) {
     console.error("[mcp] GET error:", err);
@@ -173,7 +191,7 @@ app.delete("/mcp", authMiddleware, async (req: Request, res: Response) => {
   const sessionId = req.headers["mcp-session-id"] as string | undefined;
 
   if (sessionId && sessions.has(sessionId)) {
-    const transport = sessions.get(sessionId)!;
+    const transport = sessions.get(sessionId)!.transport;
     try {
       await transport.handleRequest(req, res);
     } catch {
@@ -199,9 +217,6 @@ app.get("/health", (_req: Request, res: Response) => {
   });
 });
 
-import path from "path";
-import fs from "fs";
-
 // ---------------------------------------------------------------------------
 // Root — landing page HTML or JSON metadata fallback
 // ---------------------------------------------------------------------------
@@ -213,7 +228,7 @@ app.get("/", (_req: Request, res: Response) => {
   } else {
     res.json({
       name: "GramPay MCP Server",
-      version: "0.1.0",
+      version: "1.0.0",
       transport: "Streamable HTTP",
       endpoint: "/mcp",
       health: "/health",
@@ -236,3 +251,4 @@ app.listen(PORT, () => {
   console.error(`  Endpoint:  http://localhost:${PORT}/mcp`);
   console.error(`  Health:    http://localhost:${PORT}/health`);
 });
+

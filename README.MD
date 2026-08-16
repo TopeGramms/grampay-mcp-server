@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/logo.png" alt="GramPay Logo" width="120" />
+</p>
+
 # GramPay MCP Server
 
 [![Superteam Nigeria](https://img.shields.io/badge/Superteam-Nigeria-emerald)](https://superteam.fun)
@@ -35,8 +39,8 @@ Set the following environment variables in your deployment dashboard:
 
 ```env
 PORT=3000
-MCP_AUTH_TOKEN=d5775a3eebb61cc45108d8e55f5adc481dc2927384b9d1012b7d9aa48ea9a249
-JWT_SECRET=78b8be3a554ac5c884fb27891965dd49d78b50dd7b1319e16a1dcbd850d73af5
+MCP_AUTH_TOKEN=your_mcp_auth_token_here
+JWT_SECRET=your_jwt_secret_here
 
 IVORYPAY_SECRET_KEY=sk_test_your_key_here
 IVORYPAY_PUBLIC_KEY=pk_test_your_key_here

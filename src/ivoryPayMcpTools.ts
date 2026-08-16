@@ -3,6 +3,13 @@
 import { CONFIG } from "./config.js";
 import { IvoryPayApiError, IvoryPayClient, type CreateTransactionParams } from "./ivoryPayClient.js";
 import crypto from "crypto";
+import {
+  formatBalanceReceipt,
+  formatBankListReceipt,
+  formatErrorReceipt,
+  formatPayoutReceipt,
+  formatStatusReceipt,
+} from "./formatReceipt.js";
 
 let clientInstance: IvoryPayClient | null = null;
 
@@ -70,19 +77,8 @@ function findBank(query: string) {
   );
 }
 
-function toToolError(err: unknown) {
-  const message = err instanceof Error ? err.message : String(err);
-  if (err instanceof IvoryPayApiError) {
-    return {
-      isError: true,
-      content: [{ type: "text" as const, text: `IvoryPay error (${err.status}): ${message}` }],
-    };
-  }
-
-  return {
-    isError: true,
-    content: [{ type: "text" as const, text: `Unexpected error: ${message}` }],
-  };
+function toToolError(toolName: string, err: unknown) {
+  return formatErrorReceipt(toolName, err);
 }
 
 function resolveNgNAmount(args: Record<string, unknown>) {
@@ -130,6 +126,10 @@ function resolveNgNAmount(args: Record<string, unknown>) {
 async function resolveBankCode(args: Record<string, unknown>) {
   const directBankCode = typeof args.bankCode === "string" ? args.bankCode.trim() : "";
   if (directBankCode) {
+    const matchedByCode = BANK_DIRECTORY.find((b) => b.code === directBankCode);
+    if (matchedByCode && isWalletProvider(matchedByCode.name)) {
+      throw new Error(`Bank code "${directBankCode}" (${matchedByCode.name}) belongs to a wallet provider. Please use a traditional bank like Access Bank.`);
+    }
     return directBankCode;
   }
 
@@ -183,30 +183,22 @@ function buildBankLookupResult(query?: string) {
 export async function checkBalance() {
   try {
     if (CONFIG.MODE === "mock") {
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text: JSON.stringify(
-              {
-                mode: "mock",
-                balance_usd: 250,
-                note: "Mock balance only; set GRAMPAY_MODE=live and IVORYPAY_SECRET_KEY for real balance checks.",
-              },
-              null,
-              2
-            ),
-          },
-        ],
-      };
+      return formatBalanceReceipt({
+        balanceUsd: 250,
+        mode: "mock",
+        note: "Mock balance only; set GRAMPAY_MODE=live and IVORYPAY_SECRET_KEY for real balance checks.",
+      });
     }
 
     const balance = await getIvoryPayClient().getBalance();
-    return {
-      content: [{ type: "text" as const, text: JSON.stringify(balance, null, 2) }],
-    };
+    const usdEquiv = balance.usdEquivalent ?? balance.totalAvailableBalance ?? 0;
+    return formatBalanceReceipt({
+      balanceUsd: usdEquiv,
+      mode: "live",
+      breakdown: balance.breakDown,
+    });
   } catch (err) {
-    return toToolError(err);
+    return toToolError("checkBalance", err);
   }
 }
 
@@ -220,16 +212,10 @@ export async function lookupBank(args: Record<string, unknown>) {
           ? args.bankCode
           : undefined;
 
-    return {
-      content: [
-        {
-          type: "text" as const,
-          text: JSON.stringify(buildBankLookupResult(query), null, 2),
-        },
-      ],
-    };
+    const res = buildBankLookupResult(query);
+    return formatBankListReceipt(res);
   } catch (err) {
-    return toToolError(err);
+    return toToolError("lookupBank", err);
   }
 }
 
@@ -250,34 +236,33 @@ export async function cashoutToNGN(args: Record<string, unknown>) {
     const firstName = args.firstName.trim();
     const lastName = args.lastName.trim();
     const email = args.email.trim();
-    const reference = typeof args.reference === "string" ? args.reference : crypto.randomUUID();
+    const recipientName = typeof args.recipientName === "string" && args.recipientName.trim()
+      ? args.recipientName.trim()
+      : `${firstName} ${lastName}`;
+
+    const accountNumber = typeof args.accountNumber === "string" ? args.accountNumber.trim() : undefined;
+    const bankName = typeof args.bankName === "string"
+      ? args.bankName.trim()
+      : typeof args.bank_name === "string"
+        ? args.bank_name.trim()
+        : undefined;
+    const bankCode = typeof args.bankCode === "string" ? args.bankCode.trim() : undefined;
+
+    const reference = typeof args.reference === "string" ? args.reference : `gp_${crypto.randomUUID().slice(0, 8)}`;
 
     if (CONFIG.MODE === "mock") {
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text: `Mock mode: Transaction created and simulated. Reference: ${reference}`,
-          },
-          {
-            type: "text" as const,
-            text: JSON.stringify(
-              {
-                mode: "mock",
-                status: "SUCCESS",
-                reference,
-                amount: normalized.amount,
-                currency: "NGN",
-                firstName,
-                lastName,
-                email,
-              },
-              null,
-              2
-            ),
-          },
-        ],
-      };
+      return formatPayoutReceipt({
+        reference,
+        status: "SUCCESS",
+        amountNgn: normalized.amount,
+        amountUsd: normalized.amountUsd,
+        exchangeRate: normalized.exchangeRate,
+        bankName: bankName ?? (bankCode ? `Code ${bankCode}` : CONFIG.DEFAULT_BANK_NAME),
+        accountNumber: accountNumber ?? CONFIG.DEFAULT_BANK_ACCOUNT,
+        recipientName,
+        email,
+        mode: "mock",
+      });
     }
 
     // Step 1: Create transaction
@@ -298,64 +283,51 @@ export async function cashoutToNGN(args: Record<string, unknown>) {
     // Step 3: Verify transaction
     const verified = await getIvoryPayClient().verifyTransaction(txn.reference);
 
-    return {
-      content: [
-        {
-          type: "text" as const,
-          text: `Payout initiated successfully. Status: ${verified.status}. Reference: ${verified.reference}`,
-        },
-        {
-          type: "text" as const,
-          text: JSON.stringify(verified, null, 2),
-        },
-      ],
-    };
+    return formatPayoutReceipt({
+      reference: verified.reference ?? reference,
+      status: verified.status ?? "SUCCESS",
+      amountNgn: normalized.amount,
+      amountUsd: normalized.amountUsd,
+      exchangeRate: normalized.exchangeRate,
+      bankName: bankName ?? (bankCode ? `Code ${bankCode}` : CONFIG.DEFAULT_BANK_NAME),
+      accountNumber: accountNumber ?? CONFIG.DEFAULT_BANK_ACCOUNT,
+      recipientName,
+      email,
+      mode: "live",
+    });
   } catch (err) {
-    return toToolError(err);
+    return toToolError("cashoutToNGN", err);
   }
 }
 
 export async function listSupportedBanks() {
   try {
     if (CONFIG.MODE === "mock") {
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text: JSON.stringify(
-              {
-                mode: "mock",
-                message: "Supported bank list is only available in live mode.",
-              },
-              null,
-              2
-            ),
-          },
-        ],
-      };
+      const res = buildBankLookupResult();
+      return formatBankListReceipt(res);
     }
 
     const banks = await getIvoryPayClient().listBanks();
-    return {
-      content: [
-        {
-          type: "text" as const,
-          text: JSON.stringify({ count: banks.length, banks }, null, 2),
-        },
-      ],
-    };
+    return formatBankListReceipt({
+      count: banks.length,
+      banks: banks.map((b) => ({ name: b.name, code: b.code })),
+    });
   } catch (err) {
-    return toToolError(err);
+    return toToolError("listSupportedBanks", err);
   }
 }
 
 export async function checkTransferStatus(args: { reference: string }) {
   try {
     const transaction = await getIvoryPayClient().verifyTransaction(args.reference);
-    return {
-      content: [{ type: "text" as const, text: JSON.stringify(transaction, null, 2) }],
-    };
+    return formatStatusReceipt({
+      reference: transaction.reference ?? args.reference,
+      status: transaction.status ?? "UNKNOWN",
+      amount: transaction.amount,
+      currency: transaction.currency,
+    });
   } catch (err) {
-    return toToolError(err);
+    return toToolError("checkTransferStatus", err);
   }
 }
+
