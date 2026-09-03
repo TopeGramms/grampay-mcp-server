@@ -69,7 +69,12 @@ export function buildMcpServer(): Server {
           break;
         case "grampay_prepare_cashout":
           if (typeof args.amount_usd !== "number") throw new Error("amount_usd must be a number");
-          result = await handlers.handlePrepareCashout(args.amount_usd);
+          result = await handlers.handlePrepareCashout({
+            amount_usd: args.amount_usd,
+            accountNumber: typeof args.accountNumber === "string" ? args.accountNumber : undefined,
+            bankName: typeof args.bankName === "string" ? args.bankName : undefined,
+            bankCode: typeof args.bankCode === "string" ? args.bankCode : undefined,
+          });
           break;
         case "grampay_execute_cashout":
           if (typeof args.prepare_token !== "string") throw new Error("prepare_token must be a string");
@@ -86,6 +91,12 @@ export function buildMcpServer(): Server {
           result = await listSupportedBanks();
           break;
         case "cashout_to_ngn":
+          if (CONFIG.MODE === "live") {
+            throw new Error(
+              "cashout_to_ngn is being migrated to the /fiat-transfer payout endpoint. " +
+                "For live payouts use grampay_prepare_cashout then grampay_execute_cashout."
+            );
+          }
           result = await cashoutToNGN(args as Record<string, unknown>);
           break;
         case "check_transfer_status":
@@ -93,6 +104,12 @@ export function buildMcpServer(): Server {
           result = await checkTransferStatus({ reference: args.reference });
           break;
         case "create_transaction":
+          if (CONFIG.MODE === "live") {
+            throw new Error(
+              "create_transaction targets IvoryPay's collection endpoint (money IN), not a payout. " +
+                "Disabled in live mode; use grampay_prepare_cashout + grampay_execute_cashout for payouts."
+            );
+          }
           result = await getIvoryPayClient().createTransaction(args as any);
           break;
         case "simulate_payment":

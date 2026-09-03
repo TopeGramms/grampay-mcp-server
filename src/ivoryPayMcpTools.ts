@@ -127,7 +127,7 @@ function resolveNgNAmount(args: Record<string, unknown>) {
   };
 }
 
-async function resolveBankCode(args: Record<string, unknown>) {
+export async function resolveBankCode(args: Record<string, unknown>) {
   const directBankCode = typeof args.bankCode === "string" ? args.bankCode.trim() : "";
   if (directBankCode) {
     return directBankCode;

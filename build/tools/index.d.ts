@@ -7,6 +7,9 @@ export declare const TOOLS: ({
             query?: never;
             country?: never;
             amount_usd?: never;
+            accountNumber?: never;
+            bankName?: never;
+            bankCode?: never;
             prepare_token?: never;
             tx_id?: never;
             amount?: never;
@@ -15,9 +18,6 @@ export declare const TOOLS: ({
             lastName?: never;
             email?: never;
             recipientName?: never;
-            accountNumber?: never;
-            bankCode?: never;
-            bankName?: never;
             reference?: never;
             narration?: never;
             type?: never;
@@ -37,6 +37,9 @@ export declare const TOOLS: ({
             };
             country?: never;
             amount_usd?: never;
+            accountNumber?: never;
+            bankName?: never;
+            bankCode?: never;
             prepare_token?: never;
             tx_id?: never;
             amount?: never;
@@ -45,9 +48,6 @@ export declare const TOOLS: ({
             lastName?: never;
             email?: never;
             recipientName?: never;
-            accountNumber?: never;
-            bankCode?: never;
-            bankName?: never;
             reference?: never;
             narration?: never;
             type?: never;
@@ -67,6 +67,9 @@ export declare const TOOLS: ({
             };
             query?: never;
             amount_usd?: never;
+            accountNumber?: never;
+            bankName?: never;
+            bankCode?: never;
             prepare_token?: never;
             tx_id?: never;
             amount?: never;
@@ -75,9 +78,6 @@ export declare const TOOLS: ({
             lastName?: never;
             email?: never;
             recipientName?: never;
-            accountNumber?: never;
-            bankCode?: never;
-            bankName?: never;
             reference?: never;
             narration?: never;
             type?: never;
@@ -97,6 +97,9 @@ export declare const TOOLS: ({
             };
             query?: never;
             country?: never;
+            accountNumber?: never;
+            bankName?: never;
+            bankCode?: never;
             prepare_token?: never;
             tx_id?: never;
             amount?: never;
@@ -105,9 +108,45 @@ export declare const TOOLS: ({
             lastName?: never;
             email?: never;
             recipientName?: never;
-            accountNumber?: never;
-            bankCode?: never;
-            bankName?: never;
+            reference?: never;
+            narration?: never;
+            type?: never;
+            baseFiat?: never;
+        };
+        required: string[];
+    };
+} | {
+    name: string;
+    description: string;
+    inputSchema: {
+        type: string;
+        properties: {
+            amount_usd: {
+                type: string;
+                description: string;
+            };
+            accountNumber: {
+                type: string;
+                description: string;
+            };
+            bankName: {
+                type: string;
+                description: string;
+            };
+            bankCode: {
+                type: string;
+                description: string;
+            };
+            query?: never;
+            country?: never;
+            prepare_token?: never;
+            tx_id?: never;
+            amount?: never;
+            exchange_rate?: never;
+            firstName?: never;
+            lastName?: never;
+            email?: never;
+            recipientName?: never;
             reference?: never;
             narration?: never;
             type?: never;
@@ -128,6 +167,9 @@ export declare const TOOLS: ({
             query?: never;
             country?: never;
             amount_usd?: never;
+            accountNumber?: never;
+            bankName?: never;
+            bankCode?: never;
             tx_id?: never;
             amount?: never;
             exchange_rate?: never;
@@ -135,9 +177,6 @@ export declare const TOOLS: ({
             lastName?: never;
             email?: never;
             recipientName?: never;
-            accountNumber?: never;
-            bankCode?: never;
-            bankName?: never;
             reference?: never;
             narration?: never;
             type?: never;
@@ -158,6 +197,9 @@ export declare const TOOLS: ({
             query?: never;
             country?: never;
             amount_usd?: never;
+            accountNumber?: never;
+            bankName?: never;
+            bankCode?: never;
             prepare_token?: never;
             amount?: never;
             exchange_rate?: never;
@@ -165,9 +207,6 @@ export declare const TOOLS: ({
             lastName?: never;
             email?: never;
             recipientName?: never;
-            accountNumber?: never;
-            bankCode?: never;
-            bankName?: never;
             reference?: never;
             narration?: never;
             type?: never;
@@ -251,6 +290,9 @@ export declare const TOOLS: ({
             query?: never;
             country?: never;
             amount_usd?: never;
+            accountNumber?: never;
+            bankName?: never;
+            bankCode?: never;
             prepare_token?: never;
             tx_id?: never;
             amount?: never;
@@ -259,9 +301,6 @@ export declare const TOOLS: ({
             lastName?: never;
             email?: never;
             recipientName?: never;
-            accountNumber?: never;
-            bankCode?: never;
-            bankName?: never;
             narration?: never;
             type?: never;
             baseFiat?: never;
@@ -303,13 +342,13 @@ export declare const TOOLS: ({
             query?: never;
             country?: never;
             amount_usd?: never;
+            accountNumber?: never;
+            bankName?: never;
+            bankCode?: never;
             prepare_token?: never;
             tx_id?: never;
             exchange_rate?: never;
             recipientName?: never;
-            accountNumber?: never;
-            bankCode?: never;
-            bankName?: never;
             narration?: never;
         };
         required: string[];
@@ -327,6 +366,9 @@ export declare const TOOLS: ({
             query?: never;
             country?: never;
             amount_usd?: never;
+            accountNumber?: never;
+            bankName?: never;
+            bankCode?: never;
             prepare_token?: never;
             tx_id?: never;
             amount?: never;
@@ -335,9 +377,6 @@ export declare const TOOLS: ({
             lastName?: never;
             email?: never;
             recipientName?: never;
-            accountNumber?: never;
-            bankCode?: never;
-            bankName?: never;
             narration?: never;
             type?: never;
             baseFiat?: never;

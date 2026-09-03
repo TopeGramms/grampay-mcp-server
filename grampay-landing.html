@@ -3,770 +3,897 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>GramPay — Crypto to Naira, from inside a conversation</title>
+<meta name="description" content="GramPay is an MCP connector that gives Claude — or any MCP agent — a real tool for settling crypto to a Nigerian bank account. Live over Streamable HTTP, settled through IvoryPay, guarded by signed one-time tokens.">
+<meta name="theme-color" content="#0E1C16">
+<meta name="color-scheme" content="light">
+
+<!-- Social / Open Graph — set NEXT to your real deployed domain -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="GramPay">
+<meta property="og:title" content="GramPay — Crypto to Naira, from inside a conversation">
+<meta property="og:description" content="An MCP connector that lets your AI agent settle crypto to a Nigerian bank account. Live over Streamable HTTP, settled through IvoryPay, guarded by signed one-time tokens.">
+<meta property="og:url" content="https://grampay-mcp.up.railway.app/">
+<meta property="og:image" content="https://grampay-mcp.up.railway.app/og-image.svg">
+<meta property="og:image:type" content="image/svg+xml">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="GramPay — Crypto to Naira, from inside a conversation">
+<meta name="twitter:description" content="An MCP connector that lets your AI agent settle crypto to a Nigerian bank account. Signed one-time tokens, hard limits, real banks.">
+<meta name="twitter:image" content="https://grampay-mcp.up.railway.app/og-image.svg">
+<meta name="twitter:site" content="@TopeGramms">
+
+<!-- Favicon: inline receipt mark, no extra request -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230E1C16'/%3E%3Cpath d='M9 6h14v20l-2.3-1.6L18.3 26l-2.3-1.6L13.7 26l-2.4-1.6L9 26z' fill='%23F4EFDF'/%3E%3Cpath d='M12.5 11.5h7M12.5 15h7M12.5 18.5h4.2' stroke='%2312A150' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
 <style>
   :root {
-    --paper: #F3EFE3;
-    --paper-raised: #FBF9F2;
-    --ink: #16241C;
-    --ink-soft: #4B5A50;
-    --ink-faint: #8A9389;
-    --naira: #0F5132;
-    --naira-bright: #1C7A4B;
-    --signal: #5B3DF6;
-    --signal-soft: #EDE9FE;
-    --amber: #A8752A;
-    --rule: #D9D2BD;
-    --rule-strong: #C3BA9D;
-    --radius: 3px;
+    /* Paper — warm aged thermal receipt */
+    --paper:        #ECE5D2;
+    --paper-raised: #F6F1E2;
+    --paper-deep:   #DED4BB;   /* page behind the strip */
+
+    /* Ink — near-black with a green undertone */
+    --ink:          #0E1C16;
+    --ink-raised:   #16281F;
+    --ink-line:     #294036;
+    --on-ink:       #EDE7D6;
+    --on-ink-soft:  #93A79A;
+
+    /* Emerald — the one signature accent (money · Naira · settled) */
+    --naira:        #0B7A41;
+    --naira-deep:   #0A5E33;
+    --naira-bright: #18C46C;
+    --naira-glow:   rgba(24,196,108,0.55);
+
+    /* Reserved tints */
+    --gold:         #A8792A;   /* pending + seal metal */
+    --gold-bright:  #E6BB63;
+    --violet:       #6A5AE0;   /* code / protocol only */
+    --violet-soft:  #ECE9FB;
+
+    /* Text on paper */
+    --text:         #16241C;
+    --text-soft:    #455349;
+    --text-faint:   #7E8579;
+
+    /* Structure */
+    --rule:         #D3C9AF;
+    --rule-strong:  #BFB392;
+    --radius:       4px;
+
+    --strip:        820px;   /* receipt column width */
+    --gutter:       clamp(20px, 5vw, 40px);
+    --ease:         cubic-bezier(.2, .7, .3, 1);
   }
 
   * { box-sizing: border-box; }
-
-  html { scroll-behavior: smooth; }
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
 
   body {
     margin: 0;
-    background: #E4DDC8;
-    color: var(--ink);
-    font-family: 'IBM Plex Sans', -apple-system, sans-serif;
-    line-height: 1.55;
+    background: var(--paper-deep);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+    font-size: 17px;
+    line-height: 1.6;
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
 
-  ::selection { background: var(--signal-soft); color: var(--ink); }
+  ::selection { background: rgba(24,196,108,0.22); color: var(--text); }
 
-  a { color: var(--naira); text-decoration: none; border-bottom: 1px solid currentColor; }
-  a:hover { color: var(--naira-bright); }
-  a:focus-visible, button:focus-visible {
-    outline: 2px solid var(--signal);
-    outline-offset: 3px;
-  }
+  a { color: var(--naira); text-decoration: none; }
+  a:not(.btn):not(.plain):hover { color: var(--naira-deep); }
+  :focus-visible { outline: 2px solid var(--naira); outline-offset: 3px; border-radius: 2px; }
 
-  .mono { font-family: 'IBM Plex Mono', monospace; }
-
-  .sheet {
-    max-width: 760px;
-    margin: 0 auto;
-    padding: 0 28px;
-  }
-
-  .perf {
-    height: 14px;
-    background: radial-gradient(circle at center, #E4DDC8 4.5px, transparent 4.6px) repeat-x;
-    background-size: 22px 14px;
-    background-position: center;
-  }
-  .perf-top { transform: translateY(-7px); }
-  .receipt-wrap { background: var(--paper); }
-
-  header.sheet {
-    padding-top: 40px;
-    padding-bottom: 20px;
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    border-bottom: 1px dashed var(--rule-strong);
-  }
-  .brand {
-    font-family: 'Space Grotesk', sans-serif;
+  h1, h2, h3, h4 {
+    font-family: 'Bricolage Grotesque', 'Space Grotesk', system-ui, sans-serif;
     font-weight: 700;
-    font-size: 1.15rem;
-    letter-spacing: -0.01em;
-  }
-  .brand-mark { color: var(--naira); }
-  nav.header-links { display: flex; gap: 22px; font-size: 0.85rem; }
-  nav.header-links a { border-bottom: none; color: var(--ink-soft); }
-  nav.header-links a:hover { color: var(--naira); }
-
-  .hero { padding-top: 56px; padding-bottom: 40px; position: relative; overflow: hidden; }
-
-  /* ---- Money animations ---- */
-  #money-particles {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    overflow: hidden;
-    z-index: 0;
-  }
-  .money-particle {
-    position: absolute;
-    font-family: 'IBM Plex Mono', monospace;
-    opacity: 0;
-    user-select: none;
-    animation: moneyFloat linear infinite;
-    will-change: transform, opacity;
-  }
-  @keyframes moneyFloat {
-    0%   { opacity: 0;  transform: translateY(0)      rotate(-6deg);  }
-    10%  { opacity: var(--mpeak, 0.11); }
-    80%  { opacity: var(--mpeak, 0.11); }
-    100% { opacity: 0;  transform: translateY(-400px) rotate(14deg);  }
+    letter-spacing: -0.02em;
+    line-height: 1.06;
+    margin: 0;
   }
 
-  /* Rate ticker */
-  .rate-ticker {
-    overflow: hidden;
-    white-space: nowrap;
-    border-top: 1px dashed var(--rule-strong);
-    border-bottom: 1px dashed var(--rule-strong);
-    padding: 9px 0;
+  .mono { font-family: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace; }
+
+  /* ---------- Receipt strip container ---------- */
+  .strip {
+    max-width: var(--strip);
+    margin: 0 auto;
+    padding: 0 var(--gutter);
+  }
+  .receipt {
     background: var(--paper);
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.73rem;
-    color: var(--ink-faint);
-    letter-spacing: 0.06em;
+    background-image:
+      radial-gradient(rgba(20,30,22,0.035) 0.5px, transparent 0.6px);
+    background-size: 3px 3px;
+    max-width: calc(var(--strip) + 120px);
+    margin: 0 auto;
+    box-shadow: 0 40px 90px -50px rgba(14,28,22,0.55);
+    position: relative;
   }
-  .ticker-track {
-    display: inline-block;
-    white-space: nowrap;
-    animation: tickerScroll 36s linear infinite;
-  }
-  .rate-ticker:hover .ticker-track { animation-play-state: paused; }
-  @keyframes tickerScroll {
-    0%   { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-  }
-  .ticker-em { color: var(--naira-bright); font-weight: 500; }
-  .ticker-sep { padding: 0 18px; color: var(--rule-strong); }
 
-  /* Coin burst */
-  .cburst {
-    position: fixed;
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 9999;
-    opacity: 0;
-    animation: cBurst 0.7s cubic-bezier(.25,.46,.45,.94) forwards;
+  /* Torn / perforated edges */
+  .tear {
+    height: 16px;
+    position: relative;
+    background: var(--paper);
+    --tooth: 20px;
+    -webkit-mask: radial-gradient(circle var(--tooth) at 50% 0, transparent 98%, #000) repeat-x;
+    mask: radial-gradient(circle var(--tooth) at 50% 0, transparent 98%, #000) repeat-x;
+    -webkit-mask-size: 32px 16px; mask-size: 32px 16px;
   }
-  @keyframes cBurst {
-    0%   { opacity: 0.95; transform: translate(0,0)                              scale(1);   }
-    100% { opacity: 0;    transform: translate(var(--bx,20px),var(--by,-32px))  scale(0.3); }
+  .tear-top { -webkit-mask-position: 50% 0; mask-position: 50% 0; }
+  .tear-bottom { transform: scaleY(-1); }
+
+  /* ---------- Header ---------- */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    background: var(--paper);
+    background: color-mix(in srgb, var(--paper) 90%, transparent);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-bottom: 1px dashed var(--rule-strong);
   }
+  .header-in {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 15px 0;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 1.15rem; letter-spacing: -0.03em; }
+  .brand-glyph { width: 22px; height: 22px; flex: none; }
+  .brand .g { color: var(--naira); }
+  .live-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.66rem; font-weight: 500;
+    letter-spacing: 0.14em; text-transform: uppercase; color: var(--naira-deep);
+    padding: 3px 9px 3px 8px; border: 1px solid var(--rule-strong); border-radius: 20px;
+    background: rgba(24,196,108,0.06);
+  }
+  .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--naira-bright); box-shadow: 0 0 0 0 var(--naira-glow); animation: livePulse 2.4s var(--ease) infinite; }
+  @keyframes livePulse { 0%,100% { box-shadow: 0 0 0 0 var(--naira-glow); } 50% { box-shadow: 0 0 0 5px rgba(24,196,108,0); } }
+  nav.links { display: flex; align-items: center; gap: 22px; }
+  nav.links a { color: var(--text-soft); font-size: 0.9rem; font-weight: 500; }
+  nav.links a:hover { color: var(--naira); }
+  .nav-hide { }
+  @media (max-width: 620px) { .nav-hide { display: none; } }
+
+  /* ---------- Hero ---------- */
+  /* Vertical padding lives on .hero.strip (see Sections) so .strip keeps the gutter. */
+  .hero-grid { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: clamp(28px, 4vw, 52px); align-items: start; }
+  @media (max-width: 860px) { .hero-grid { grid-template-columns: 1fr; gap: 36px; } }
+
   .eyebrow {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.72rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--ink-faint);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 18px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; font-weight: 500;
+    letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-faint);
+    display: inline-flex; align-items: center; gap: 10px; margin-bottom: 22px;
   }
-  .eyebrow::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--naira); display: inline-block; }
-  h1 {
-    font-family: 'Space Grotesk', sans-serif;
-    font-weight: 600;
-    font-size: clamp(2rem, 5vw, 2.9rem);
-    line-height: 1.12;
-    letter-spacing: -0.015em;
-    margin: 0 0 20px;
-    max-width: 15ch;
-  }
-  h1 em { font-style: normal; color: var(--naira); }
-  .lede { font-size: 1.08rem; color: var(--ink-soft); max-width: 46ch; margin: 0 0 34px; }
-  .lede strong { color: var(--ink); font-weight: 600; }
+  .eyebrow b { color: var(--naira-deep); font-weight: 600; }
 
-  .cta-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+  h1 { font-size: clamp(2.35rem, 6.2vw, 3.9rem); font-weight: 800; letter-spacing: -0.035em; max-width: 15ch; }
+  h1 .turn { color: var(--naira); position: relative; white-space: nowrap; }
+  h1 .arrow { display: inline-block; color: var(--naira-bright); }
+
+  .lede { font-size: clamp(1.05rem, 1.6vw, 1.2rem); color: var(--text-soft); max-width: 42ch; margin: 24px 0 32px; }
+  .lede b { color: var(--text); font-weight: 600; }
+
+  .cta-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
   .btn {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.82rem;
-    padding: 12px 20px;
-    border-radius: var(--radius);
-    border: 1px solid var(--ink);
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    background: none;
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.85rem; font-weight: 500;
+    padding: 13px 20px; border-radius: var(--radius); border: 1px solid transparent;
+    display: inline-flex; align-items: center; gap: 9px; cursor: pointer;
+    background: none; transition: transform 0.18s var(--ease), background 0.18s var(--ease), box-shadow 0.18s var(--ease);
   }
-  .btn-primary { background: var(--naira); color: var(--paper-raised); border-color: var(--naira); }
-  .btn-primary:hover { background: var(--naira-bright); border-color: var(--naira-bright); color: var(--paper-raised); }
-  .btn-ghost { color: var(--ink); border-bottom: none; }
-  .btn-ghost:hover { background: var(--paper-raised); color: var(--ink); }
+  .btn:active { transform: translateY(1px); }
+  .btn-primary { background: var(--naira); color: #F4FBF6; border-color: var(--naira); box-shadow: 0 12px 26px -14px rgba(11,122,65,0.9); }
+  .btn-primary:hover { background: var(--naira-deep); box-shadow: 0 16px 30px -14px rgba(11,122,65,0.95); transform: translateY(-1px); }
+  .btn-ghost { color: var(--text); border-color: var(--rule-strong); }
+  .btn-ghost:hover { background: var(--paper-raised); border-color: var(--text-soft); }
+  .btn .copied-label { display: none; }
+  .btn.is-copied .default-label { display: none; }
+  .btn.is-copied .copied-label { display: inline; }
 
-  .ledger {
-    margin-top: 46px;
+  .trust-inline { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 22px; font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; color: var(--text-faint); letter-spacing: 0.02em; }
+  .trust-inline span { display: inline-flex; align-items: center; gap: 6px; }
+  .trust-inline svg { flex: none; color: var(--naira); }
+
+  /* ---------- Terminal receipt (signature) ---------- */
+  .term {
     background: var(--ink);
-    color: var(--paper);
-    border-radius: 6px;
-    padding: 22px 24px 20px;
+    color: var(--on-ink);
+    border-radius: 8px;
+    padding: 0;
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.86rem;
     position: relative;
     overflow: hidden;
-    box-shadow: 0 18px 40px -22px rgba(22,36,28,0.55);
+    box-shadow: 0 30px 70px -34px rgba(14,28,22,0.85), inset 0 0 0 1px rgba(255,255,255,0.04);
   }
-  .ledger::before {
-    content: "";
-    position: absolute; inset: 0;
-    background: linear-gradient(115deg, transparent 40%, rgba(91,61,246,0.10) 55%, transparent 70%);
-    pointer-events: none;
+  .term::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(120% 60% at 80% -10%, rgba(24,196,108,0.14), transparent 60%);
   }
-  .ledger-head {
-    display: flex; justify-content: space-between; align-items: center;
-    color: #8FA396;
-    font-size: 0.72rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    margin-bottom: 14px;
-    padding-bottom: 12px;
-    border-bottom: 1px dashed #33463A;
+  .term-tear { height: 12px; background: var(--ink);
+    -webkit-mask: radial-gradient(circle 8px at 50% 100%, transparent 98%, #000) repeat-x; mask: radial-gradient(circle 8px at 50% 100%, transparent 98%, #000) repeat-x;
+    -webkit-mask-size: 22px 12px; mask-size: 22px 12px; }
+  .term-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 18px 12px; border-bottom: 1px dashed var(--ink-line);
+    font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--on-ink-soft);
   }
-  .ledger-row { display: flex; justify-content: space-between; padding: 4px 0; }
-  .ledger-key { color: #8FA396; }
-  .ledger-val { color: var(--paper); }
-  .status-pill {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 2px 9px 2px 7px;
-    border-radius: 20px;
-    font-size: 0.72rem;
-    background: rgba(255,255,255,0.08);
-  }
-  .status-pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; }
-  .status-pending::before { background: var(--amber); }
-  .status-pending { color: #E0B876; }
-  .status-success::before { background: #4ADE80; }
-  .status-success { color: #86EFAC; }
-  .cursor-blink { animation: blink 1s steps(1) infinite; color: var(--signal); }
-  @keyframes blink { 50% { opacity: 0; } }
+  .term-head .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--naira-bright); display: inline-block; margin-right: 7px; vertical-align: middle; box-shadow: 0 0 8px var(--naira-glow); }
+  .term-body { padding: 16px 18px 20px; position: relative; }
 
-  .status-pill.stamp-pop { animation: stampPop 0.55s cubic-bezier(.34,1.56,.64,1); }
-  @keyframes stampPop {
-    0% { transform: scale(0.55) rotate(-8deg); opacity: 0.3; }
-    55% { transform: scale(1.18) rotate(2deg); opacity: 1; }
-    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  .rcpt-line {
+    display: flex; justify-content: space-between; gap: 14px; align-items: baseline;
+    padding: 5px 0; font-size: 0.82rem;
+    opacity: 0; transform: translateY(-6px);
   }
-  .status-check {
-    display: inline-block;
-    margin-left: 5px;
-    opacity: 0;
-    transform: scale(0.4);
-    color: #4ADE80;
-  }
-  .status-check.show {
-    opacity: 1;
-    transform: scale(1);
-    transition: opacity 0.3s ease, transform 0.3s cubic-bezier(.34,1.56,.64,1);
+  .rcpt-line.printed { opacity: 1; transform: none; transition: opacity 0.28s var(--ease), transform 0.28s var(--ease); }
+  .rcpt-key { color: var(--on-ink-soft); }
+  .rcpt-val { color: var(--on-ink); text-align: right; }
+  .rcpt-val .em { color: var(--naira-bright); }
+  .rcpt-val .vio { color: #A99BFF; }
+  .rcpt-sep { border: none; border-top: 1px dashed var(--ink-line); margin: 10px 0; opacity: 0; }
+  .rcpt-sep.printed { opacity: 1; transition: opacity 0.28s var(--ease); }
+
+  .print-head {
+    position: absolute; left: 12px; right: 12px; top: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--naira-bright), transparent);
+    box-shadow: 0 0 12px var(--naira-glow); opacity: 0; pointer-events: none;
   }
 
-  section.sheet { padding-top: 52px; padding-bottom: 8px; }
-  .section-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 22px; }
-  .section-num { font-family: 'IBM Plex Mono', monospace; color: var(--ink-faint); font-size: 0.82rem; }
-  h2 { font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; font-weight: 600; margin: 0; letter-spacing: -0.01em; }
-  .rule { border: none; border-top: 1px dashed var(--rule-strong); margin: 48px 0 0; }
-  p.body-text { color: var(--ink-soft); max-width: 58ch; }
-
-  .line-items { margin-top: 8px; }
-  .line-item { display: flex; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--rule); transition: transform 0.2s ease; }
-  .line-item:hover { transform: translateX(4px); }
-  .line-item:first-child { border-top: 1px solid var(--rule); }
-  .line-num { font-family: 'IBM Plex Mono', monospace; color: var(--naira); font-size: 0.85rem; padding-top: 2px; min-width: 24px; }
-  .line-item h3 { font-family: 'Space Grotesk', sans-serif; font-size: 1.02rem; font-weight: 600; margin: 0 0 4px; }
-  .line-item p { margin: 0; color: var(--ink-soft); font-size: 0.95rem; }
-
-  .code-block {
-    background: var(--ink);
-    color: #D7E4DA;
-    border-radius: 6px;
-    padding: 18px 20px;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.82rem;
-    overflow-x: auto;
-    margin: 18px 0;
-    line-height: 1.7;
+  .stamp {
+    position: absolute; right: 20px; bottom: 18px;
+    width: 92px; height: 92px; display: grid; place-items: center;
+    border: 2px solid var(--naira-bright); border-radius: 50%;
+    color: var(--naira-bright); font-size: 0.66rem; font-weight: 600; letter-spacing: 0.12em;
+    transform: rotate(-11deg) scale(1.5); opacity: 0;
+    box-shadow: inset 0 0 0 3px rgba(24,196,108,0.18);
+    text-align: center; line-height: 1.2;
   }
-  .code-block .muted { color: #63776A; }
-  .code-block .signal { color: #A692FF; }
-  .code-block .str { color: #9AD8B4; }
-
-  .tool-list { display: grid; gap: 10px; margin: 20px 0; }
-  .tool {
-    display: flex; gap: 14px; align-items: flex-start;
-    padding: 14px 16px;
-    background: var(--paper-raised);
-    border: 1px solid var(--rule);
-    border-radius: var(--radius);
-    transition: transform 0.2s ease;
+  .stamp.pressed { opacity: 1; transform: rotate(-11deg) scale(1); animation: stampPress 0.55s cubic-bezier(.2,.9,.25,1.1) both; }
+  @keyframes stampPress {
+    0% { opacity: 0; transform: rotate(-24deg) scale(1.7); filter: blur(3px); }
+    60% { opacity: 1; transform: rotate(-8deg) scale(0.94); filter: blur(0); }
+    100% { opacity: 1; transform: rotate(-11deg) scale(1); }
   }
-  .tool:hover { transform: translateX(4px); }
-  .tool-name { font-family: 'IBM Plex Mono', monospace; font-size: 0.84rem; color: var(--naira); white-space: nowrap; padding-top: 1px; }
-  .tool-desc { font-size: 0.9rem; color: var(--ink-soft); }
+  .stamp small { display: block; font-size: 0.5rem; letter-spacing: 0.16em; color: var(--naira); opacity: 0.85; margin-top: 3px; }
 
-  .callout {
-    border-left: 3px solid var(--signal);
-    background: var(--signal-soft);
-    padding: 14px 18px;
-    border-radius: 0 var(--radius) var(--radius) 0;
-    font-size: 0.9rem;
-    color: #3A2B8A;
-    margin: 20px 0;
+  /* ---------- Rate ticker ---------- */
+  .ticker {
+    overflow: hidden; white-space: nowrap;
+    border-top: 1px dashed var(--rule-strong); border-bottom: 1px dashed var(--rule-strong);
+    padding: 10px 0; background: var(--paper-raised);
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.74rem; color: var(--text-faint);
+    letter-spacing: 0.05em; -webkit-mask: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); mask: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
   }
-  .callout strong { color: #2A1D6E; }
+  .ticker-track { display: inline-block; white-space: nowrap; animation: tick 42s linear infinite; }
+  .ticker:hover .ticker-track { animation-play-state: paused; }
+  @keyframes tick { to { transform: translateX(-50%); } }
+  .ticker .em { color: var(--naira-deep); font-weight: 600; }
+  .ticker .sep { padding: 0 16px; color: var(--rule-strong); }
 
-  table.ledger-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.9rem; }
-  .ledger-table th {
-    text-align: left;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.72rem;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--ink-faint);
-    padding: 0 12px 10px 0;
-    border-bottom: 1px solid var(--rule-strong);
-    font-weight: 500;
+  /* ---------- Sections ---------- */
+  /* NB: .strip sets horizontal padding with a shorthand, so the vertical
+     rhythm needs matching specificity or it gets zeroed out. */
+  section.strip { padding-top: clamp(64px, 8vw, 104px); }
+  .hero.strip { padding-top: clamp(38px, 5vw, 60px); padding-bottom: 40px; }
+  .sec-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; }
+  .sec-ref { font-family: 'IBM Plex Mono', monospace; color: var(--naira); font-size: 0.78rem; font-weight: 500; letter-spacing: 0.06em; }
+  h2 { font-size: clamp(1.55rem, 3.4vw, 2.1rem); font-weight: 700; letter-spacing: -0.025em; }
+  .sec-lede { color: var(--text-soft); max-width: 56ch; margin: 12px 0 0; }
+
+  .rule { border: none; border-top: 1px dashed var(--rule-strong); margin: 56px auto 0; }
+
+  /* Line items */
+  .items { margin-top: 26px; }
+  .item { display: grid; grid-template-columns: 44px 1fr; gap: 8px; padding: 18px 0; border-top: 1px solid var(--rule); transition: background 0.2s var(--ease); }
+  .item:last-child { border-bottom: 1px solid var(--rule); }
+  .item-n { font-family: 'IBM Plex Mono', monospace; color: var(--naira); font-size: 0.82rem; padding-top: 3px; }
+  .item h3 { font-size: 1.08rem; font-weight: 600; margin-bottom: 5px; }
+  .item p { margin: 0; color: var(--text-soft); font-size: 0.97rem; }
+
+  /* ---------- The flow (dark pipeline) ---------- */
+  .flow {
+    background: var(--ink); color: var(--on-ink); border-radius: 10px;
+    padding: clamp(24px, 4vw, 38px); margin-top: 28px; position: relative; overflow: hidden;
+    box-shadow: 0 30px 70px -44px rgba(14,28,22,0.8);
   }
-  .ledger-table td { padding: 13px 12px 13px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
-  .provider-name { font-weight: 600; font-family: 'Space Grotesk', sans-serif; }
-  .tag { display: inline-flex; align-items: center; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 0.74rem; padding: 3px 9px; border-radius: 20px; }
+  .flow-eyebrow { font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--on-ink-soft); margin-bottom: 22px; }
+  .pipe { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; position: relative; }
+  @media (max-width: 680px) { .pipe { grid-template-columns: 1fr; gap: 14px; } }
+  .node { position: relative; padding: 0 14px; }
+  .node-dot { width: 13px; height: 13px; border-radius: 50%; background: var(--ink-raised); border: 2px solid var(--ink-line); position: relative; z-index: 2; transition: all 0.4s var(--ease); }
+  .node.lit .node-dot { background: var(--naira-bright); border-color: var(--naira-bright); box-shadow: 0 0 0 5px rgba(24,196,108,0.16), 0 0 14px var(--naira-glow); }
+  /* Rail runs dot-center → next dot-center. Dots sit ~20px from each equal-width
+     column's left edge, so left:20 / right:-20 spans exactly one column width. */
+  .node-rail { position: absolute; top: 6px; left: 20px; right: -20px; height: 2px; background: var(--ink-line); z-index: 1; overflow: hidden; }
+  .node:last-child .node-rail { display: none; }
+  @media (max-width: 680px) { .node-rail { display: none; } }
+  .node-rail::after { content: ""; position: absolute; inset: 0; width: 0; background: linear-gradient(90deg, var(--naira), var(--naira-bright)); transition: width 0.5s var(--ease); }
+  .node.flowed .node-rail::after { width: 100%; }
+  .node-k { font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; color: var(--naira-bright); margin-top: 16px; letter-spacing: 0.02em; }
+  .node h4 { font-size: 1rem; font-weight: 600; margin: 6px 0 4px; }
+  .node p { margin: 0; font-size: 0.86rem; color: var(--on-ink-soft); line-height: 1.5; }
+  .node .tag-safe { display: inline-block; font-family: 'IBM Plex Mono', monospace; font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold-bright); border: 1px solid rgba(230,187,99,0.4); border-radius: 3px; padding: 1px 6px; margin-top: 8px; }
+
+  /* ---------- Code block ---------- */
+  .code {
+    background: var(--ink); color: #D7E4DA; border-radius: 8px;
+    padding: 18px 20px; font-family: 'IBM Plex Mono', monospace; font-size: 0.82rem;
+    overflow-x: auto; margin: 22px 0 0; line-height: 1.75; position: relative;
+  }
+  .code .muted { color: #61756A; }
+  .code .k { color: #8EA69A; }
+  .code .v { color: #9FE0BC; }
+  .code .vio { color: #A99BFF; }
+  .code-copy {
+    position: absolute; top: 12px; right: 12px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem; color: var(--on-ink-soft);
+    background: var(--ink-raised); border: 1px solid var(--ink-line); border-radius: 4px;
+    padding: 5px 10px; cursor: pointer; transition: all 0.18s var(--ease);
+  }
+  .code-copy:hover { color: var(--naira-bright); border-color: var(--naira); }
+  .code-copy.is-copied { color: var(--naira-bright); }
+
+  .steps { display: grid; gap: 2px; margin-top: 24px; counter-reset: step; }
+  .step { display: grid; grid-template-columns: 30px 1fr; gap: 12px; padding: 12px 0; align-items: baseline; border-bottom: 1px solid var(--rule); }
+  .step:last-child { border-bottom: none; }
+  .step::before { counter-increment: step; content: counter(step); font-family: 'IBM Plex Mono', monospace; font-size: 0.78rem; color: #F4FBF6; background: var(--naira); width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; }
+  .step p { margin: 0; color: var(--text-soft); font-size: 0.95rem; }
+  .step p b { color: var(--text); font-weight: 600; }
+  .step code { font-family: 'IBM Plex Mono', monospace; font-size: 0.85em; background: var(--paper-deep); padding: 1px 6px; border-radius: 3px; color: var(--naira-deep); }
+
+  /* ---------- Say it (natural language, not a tool menu) ---------- */
+  .say-head { font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-faint); margin: 34px 0 0; }
+  .say { border-top: 1px dashed var(--rule-strong); margin-top: 14px; }
+  .say-row { display: grid; grid-template-columns: auto 1fr; gap: 15px; align-items: start; padding: 19px 2px; border-bottom: 1px dashed var(--rule); }
+  .say-mark { font-family: 'Bricolage Grotesque', Georgia, serif; font-size: 2.6rem; font-weight: 700; line-height: 0.72; color: var(--naira); opacity: 0.55; transform: translateY(2px); user-select: none; }
+  .say-line { margin: 0; font-size: 1.12rem; line-height: 1.5; color: var(--ink); font-weight: 500; letter-spacing: -0.01em; }
+  .say-note { margin: 7px 0 0; font-family: 'IBM Plex Mono', monospace; font-size: 0.74rem; line-height: 1.6; letter-spacing: 0.01em; color: var(--text-faint); }
+  .say-note b { color: var(--naira-deep); font-weight: 600; }
+  .tools-more { margin-top: 18px; font-size: 0.9rem; color: var(--text-faint); }
+
+  /* ---------- Security panel ---------- */
+  .vault { background: var(--ink); color: var(--on-ink); border-radius: 10px; padding: clamp(26px, 4vw, 40px); margin-top: 28px; box-shadow: 0 30px 70px -44px rgba(14,28,22,0.8); position: relative; overflow: hidden; }
+  .vault::before { content: ""; position: absolute; inset: 0; background: radial-gradient(90% 50% at 10% 0%, rgba(24,196,108,0.10), transparent 55%); pointer-events: none; }
+  .vault-eyebrow { font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--on-ink-soft); margin-bottom: 6px; }
+  .vault h2 { color: var(--on-ink); margin-bottom: 26px; }
+  .vault-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--ink-line); border: 1px solid var(--ink-line); border-radius: 8px; overflow: hidden; }
+  @media (max-width: 620px) { .vault-grid { grid-template-columns: 1fr; } }
+  .guard { background: var(--ink); padding: 20px 22px; }
+  .guard-ic { color: var(--naira-bright); margin-bottom: 12px; }
+  .guard h4 { font-size: 1rem; font-weight: 600; margin-bottom: 6px; color: var(--on-ink); }
+  .guard p { margin: 0; font-size: 0.88rem; color: var(--on-ink-soft); line-height: 1.55; }
+  .guard code { font-family: 'IBM Plex Mono', monospace; font-size: 0.82em; color: var(--naira-bright); }
+
+  /* ---------- Ledger table ---------- */
+  .ltable { width: 100%; border-collapse: collapse; margin-top: 24px; font-size: 0.92rem; }
+  .ltable th { text-align: left; font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-faint); padding: 0 12px 12px 0; border-bottom: 1px solid var(--rule-strong); font-weight: 500; }
+  .ltable td { padding: 15px 12px 15px 0; border-bottom: 1px solid var(--rule); vertical-align: middle; }
+  .prov { font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600; font-size: 1rem; }
+  .tag { display: inline-flex; align-items: center; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
   .tag::before { content: ""; width: 6px; height: 6px; border-radius: 50%; }
-  .tag-live { background: #E4F3E9; color: #1C7A4B; }
-  .tag-live::before { background: #1C7A4B; }
-  .tag-blocked { background: #F5E9DC; color: var(--amber); }
-  .tag-blocked::before { background: var(--amber); }
+  .tag-live { background: rgba(11,122,65,0.12); color: var(--naira-deep); }
+  .tag-live::before { background: var(--naira); box-shadow: 0 0 0 0 var(--naira-glow); animation: livePulse 2.4s var(--ease) infinite; }
+  .tag-wait { background: rgba(168,121,42,0.14); color: var(--gold); }
+  .tag-wait::before { background: var(--gold); }
 
-  .roadmap { position: relative; padding-left: 28px; margin-top: 8px; }
-  .roadmap::before { content: ""; position: absolute; left: 5px; top: 6px; bottom: 6px; width: 1px; background: var(--rule-strong); }
-  .stage { position: relative; padding-bottom: 28px; }
-  .stage::before { content: ""; position: absolute; left: -28px; top: 4px; width: 11px; height: 11px; border-radius: 50%; background: var(--paper); border: 2px solid var(--ink-faint); }
-  .stage.active::before { border-color: var(--naira); background: var(--naira); animation: pulse-dot 2.2s ease-in-out infinite; }
-  @keyframes pulse-dot {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(15,81,50,0.35); }
-    50% { box-shadow: 0 0 0 6px rgba(15,81,50,0); }
+  /* ---------- Roadmap ---------- */
+  .road { position: relative; padding-left: 30px; margin-top: 26px; }
+  .road::before { content: ""; position: absolute; left: 5px; top: 8px; bottom: 8px; width: 1px; background: var(--rule-strong); }
+  .stage { position: relative; padding-bottom: 26px; }
+  .stage:last-child { padding-bottom: 0; }
+  .stage::before { content: ""; position: absolute; left: -30px; top: 3px; width: 11px; height: 11px; border-radius: 50%; background: var(--paper); border: 2px solid var(--rule-strong); }
+  .stage.now::before { border-color: var(--naira); background: var(--naira); box-shadow: 0 0 0 0 var(--naira-glow); animation: livePulse 2.4s var(--ease) infinite; }
+  .stage-tag { font-family: 'IBM Plex Mono', monospace; font-size: 0.66rem; letter-spacing: 0.12em; color: var(--text-faint); text-transform: uppercase; }
+  .stage.now .stage-tag { color: var(--naira-deep); }
+  .stage h4 { font-size: 1.04rem; font-weight: 600; margin: 4px 0 4px; }
+  .stage p { margin: 0; color: var(--text-soft); font-size: 0.92rem; }
+
+  /* ---------- Boundaries ---------- */
+  .bounds { background: var(--paper-raised); border: 1px solid var(--rule); border-left: 3px solid var(--naira); border-radius: var(--radius); padding: 22px 24px; margin-top: 24px; }
+  .bounds h3 { font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-faint); font-weight: 500; margin-bottom: 12px; }
+  .bounds ul { margin: 0; padding-left: 20px; color: var(--text-soft); }
+  .bounds li { margin-bottom: 8px; font-size: 0.95rem; }
+  .bounds li:last-child { margin-bottom: 0; }
+  .bounds b { color: var(--text); font-weight: 600; }
+
+  /* ---------- Footer ---------- */
+  footer { margin-top: clamp(56px, 8vw, 84px); background: var(--ink); color: var(--on-ink-soft); }
+  .foot-in { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 28px; padding: 46px 0 0; }
+  footer .brand { color: var(--on-ink); }
+  footer .brand .g { color: var(--naira-bright); }
+  footer p { font-size: 0.88rem; max-width: 42ch; margin: 14px 0 0; color: var(--on-ink-soft); line-height: 1.6; }
+  .foot-links { display: flex; gap: 20px; font-size: 0.9rem; }
+  footer a { color: #C6D3CB; }
+  footer a:hover { color: var(--naira-bright); }
+  .foot-meta { font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; color: #566A5E; margin-top: 34px; padding: 22px 0 40px; border-top: 1px dashed var(--ink-line); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+
+  /* ---------- Reveal ---------- */
+  .reveal { opacity: 0; transform: translateY(22px); }
+  .reveal.in {
+    opacity: 1; transform: none;
+    transition: opacity 0.7s var(--ease), transform 0.7s var(--ease);
   }
-  .stage h4 { font-family: 'Space Grotesk', sans-serif; font-size: 0.98rem; margin: 0 0 4px; }
-  .stage p { margin: 0; color: var(--ink-soft); font-size: 0.9rem; }
-  .stage .stage-tag { font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; color: var(--ink-faint); }
 
-  .disclosure { background: var(--paper-raised); border: 1px solid var(--rule); border-radius: var(--radius); padding: 18px 20px; margin-top: 14px; }
-  .disclosure ul { margin: 8px 0 0; padding-left: 18px; color: var(--ink-soft); font-size: 0.9rem; }
-  .disclosure li { margin-bottom: 5px; }
-
-  footer { margin-top: 60px; background: var(--ink); color: #9BAA9F; padding: 44px 0 36px; }
-  footer .sheet { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 24px; }
-  footer .brand { color: var(--paper); }
-  footer .brand-mark { color: #6FDB9C; }
-  footer p { font-size: 0.85rem; max-width: 40ch; margin: 10px 0 0; }
-  footer .foot-links { display: flex; gap: 18px; font-size: 0.85rem; }
-  footer a { color: #C7D3CA; border-bottom-color: #445048; }
-  footer a:hover { color: #fff; }
-  .foot-print { font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; color: #5E6E63; margin-top: 30px; padding-top: 20px; border-top: 1px dashed #33463A; }
-
-  /* ---- Motion: reveal states ---- */
-  .reveal-init { opacity: 0; transform: translateY(20px); }
-  .reveal-init.in-view {
-    opacity: 1;
-    transform: translateY(0);
-    transition: opacity 0.7s cubic-bezier(.16,.84,.44,1), transform 0.7s cubic-bezier(.16,.84,.44,1);
-  }
-
+  /* ---------- Reduced motion ---------- */
   @media (prefers-reduced-motion: reduce) {
-    .reveal-init { opacity: 1 !important; transform: none !important; transition: none !important; }
-    .status-pill.stamp-pop { animation: none !important; }
-    .stage.active::before { animation: none !important; }
-    .cursor-blink { animation: none !important; }
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+    .reveal { opacity: 1 !important; transform: none !important; }
+    .ticker-track { animation: none !important; }
   }
 
-  @media (max-width: 600px) {
-    header.sheet { flex-direction: column; align-items: flex-start; gap: 10px; }
-    nav.header-links { gap: 16px; }
-    footer .sheet { flex-direction: column; }
+  @media (max-width: 620px) {
+    body { font-size: 16px; }
+    .foot-in { flex-direction: column; }
   }
 </style>
 </head>
 <body>
 
-<div class="receipt-wrap">
-  <div class="perf perf-top"></div>
+<div class="receipt">
+  <div class="tear tear-top"></div>
 
-  <header class="sheet">
-    <div class="brand"><span class="brand-mark">Gram</span>Pay</div>
-    <nav class="header-links">
-      <a href="#connect">Connect</a>
-      <a href="#providers">Providers</a>
-      <a href="#roadmap">Roadmap</a>
-      <a href="https://github.com/TopeGramms/grampay-mcp-server">GitHub</a>
-    </nav>
+  <header>
+    <div class="strip header-in">
+      <div class="brand">
+        <svg class="brand-glyph" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#0E1C16"/><path d="M9 6h14v20l-2.3-1.6L18.3 26l-2.3-1.6L13.7 26l-2.4-1.6L9 26z" fill="#F4EFDF"/><path d="M12.5 11.5h7M12.5 15h7M12.5 18.5h4.2" stroke="#18C46C" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <span><span class="g">Gram</span>Pay</span>
+      </div>
+      <nav class="links">
+        <a class="nav-hide" href="#flow">Flow</a>
+        <a class="nav-hide" href="#connect">Connect</a>
+        <a class="nav-hide" href="#security">Security</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </div>
   </header>
 
   <main>
-    <section class="hero sheet">
-      <div id="money-particles" aria-hidden="true"></div>
-      <div class="eyebrow reveal-init hero-anim">MCP Connector · Crypto → NGN</div>
-      <h1 class="reveal-init hero-anim">Tell your AI to cash out.<br>It reaches a <em>Nigerian bank account.</em></h1>
-      <p class="lede reveal-init hero-anim">
-        GramPay is an open MCP server that gives Claude — or any MCP-capable agent —
-        a real tool for settling crypto to Naira. <strong>Built solo, tested end-to-end,
-        live today.</strong>
-      </p>
-      <div class="cta-row reveal-init hero-anim">
-        <button class="btn btn-primary" type="button">Connect in Claude →</button>
-        <a class="btn btn-ghost" href="https://github.com/TopeGramms/grampay-mcp-server">View source</a>
-      </div>
+    <!-- HERO -->
+    <section class="hero strip">
+      <div class="hero-grid">
+        <div>
+          <div class="eyebrow reveal"><span>MCP Connector · Crypto <b>→</b> Naira</span><span class="live-chip"><span class="live-dot"></span>Live</span></div>
+          <h1 class="reveal">Tell your AI to cash&nbsp;out. <span class="turn">It settles<span class="arrow"> ↳</span></span> to a Nigerian bank account.</h1>
+          <p class="lede reveal">
+            GramPay is an <b>MCP connector</b> that gives Claude — or any MCP-capable agent —
+            a real tool for turning crypto into Naira. Live over Streamable HTTP,
+            settled through <b>IvoryPay</b>, guarded by signed one-time tokens and hard limits.
+          </p>
+          <div class="cta-row reveal">
+            <button class="btn btn-primary" id="connect-cta" type="button">
+              <span class="default-label">Connect in Claude →</span>
+              <span class="copied-label">URL copied — paste in Claude ✓</span>
+            </button>
+            <a class="btn btn-ghost" href="#contact">Request access</a>
+          </div>
+          <div class="trust-inline reveal">
+            <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/></svg> Signed one-time tokens</span>
+            <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 12h16M12 4v16"/></svg> $1,000 cashout cap</span>
+            <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg> Real banks only</span>
+          </div>
+        </div>
 
-      <div class="ledger reveal-init hero-anim" role="group" aria-label="Example transaction status">
-        <div class="ledger-head">
-          <span>grampay_mcp · tool_call</span>
-          <span>live demo</span>
-        </div>
-        <div class="ledger-row">
-          <span class="ledger-key">tool</span>
-          <span class="ledger-val">cashout_to_ngn</span>
-        </div>
-        <div class="ledger-row">
-          <span class="ledger-key">amount</span>
-          <span class="ledger-val" id="amount-val">₦ 165,000.00</span>
-        </div>
-        <div class="ledger-row">
-          <span class="ledger-key">reference</span>
-          <span class="ledger-val" id="ref-val">1785…</span>
-        </div>
-        <div class="ledger-row">
-          <span class="ledger-key">status</span>
-          <span class="ledger-val" id="status-val">
-            <span class="status-pill status-pending" id="status-pill">
-              <span id="status-text">PENDING</span><span class="cursor-blink">_</span>
-            </span><span class="status-check" id="status-check">✓</span>
-          </span>
+        <!-- Signature: the settlement receipt that prints itself -->
+        <div class="reveal">
+          <div class="term" id="receipt" role="img" aria-label="Example settlement receipt: 100 US dollars in USDC converts to 165,000 Naira, prepared with a signed one-time token and settled to a Nigerian bank account through IvoryPay.">
+            <div class="term-head">
+              <span><span class="dot"></span>settlement receipt</span>
+              <span>ivorypay</span>
+            </div>
+            <div class="term-body" id="receipt-body" aria-hidden="true">
+              <div class="print-head" id="print-head"></div>
+              <div class="rcpt-line" data-line><span class="rcpt-key">tool</span><span class="rcpt-val"><span class="em">cashout_to_ngn</span></span></div>
+              <div class="rcpt-line" data-line><span class="rcpt-key">quote</span><span class="rcpt-val">1 USDC = <span class="em">₦1,650</span></span></div>
+              <div class="rcpt-line" data-line><span class="rcpt-key">amount</span><span class="rcpt-val">$100.00 USDC</span></div>
+              <div class="rcpt-line" data-line><span class="rcpt-key">converted</span><span class="rcpt-val em" id="rcpt-amount">₦0.00</span></div>
+              <hr class="rcpt-sep" data-line>
+              <div class="rcpt-line" data-line><span class="rcpt-key">recipient</span><span class="rcpt-val">•••• 4821 · Access</span></div>
+              <div class="rcpt-line" data-line><span class="rcpt-key">prepare</span><span class="rcpt-val"><span class="vio">jwt</span> signed · exp 5m</span></div>
+              <div class="rcpt-line" data-line><span class="rcpt-key">reference</span><span class="rcpt-val" id="rcpt-ref">1785······</span></div>
+              <hr class="rcpt-sep" data-line>
+              <div class="rcpt-line" data-line><span class="rcpt-key">status</span><span class="rcpt-val" id="rcpt-status">processing<span id="rcpt-cursor" style="color:var(--naira-bright)">_</span></span></div>
+              <div class="stamp" id="stamp">SETTLED<small>ngn ✓</small></div>
+            </div>
+            <div class="term-tear"></div>
+          </div>
         </div>
       </div>
     </section>
 
-    <div class="rate-ticker" aria-hidden="true">
-      <span class="ticker-track">
-        <span class="ticker-em">1 USDC</span> = <span class="ticker-em">₦1,650</span><span class="ticker-sep">·</span>Crypto → Naira, instant<span class="ticker-sep">·</span><span class="ticker-em">IvoryPay</span> settlement<span class="ticker-sep">·</span>USDT → NGN<span class="ticker-sep">·</span>BTC → NGN<span class="ticker-sep">·</span>ETH → NGN<span class="ticker-sep">·</span>cashout_to_ngn tool call<span class="ticker-sep">·</span><span class="ticker-em">₦1,650</span> / USDC<span class="ticker-sep">·</span>Nigerian bank accounts<span class="ticker-sep">·</span>MCP · Model Context Protocol<span class="ticker-sep">·</span>grampay_execute_cashout<span class="ticker-sep">·</span>
-        <span class="ticker-em">1 USDC</span> = <span class="ticker-em">₦1,650</span><span class="ticker-sep">·</span>Crypto → Naira, instant<span class="ticker-sep">·</span><span class="ticker-em">IvoryPay</span> settlement<span class="ticker-sep">·</span>USDT → NGN<span class="ticker-sep">·</span>BTC → NGN<span class="ticker-sep">·</span>ETH → NGN<span class="ticker-sep">·</span>cashout_to_ngn tool call<span class="ticker-sep">·</span><span class="ticker-em">₦1,650</span> / USDC<span class="ticker-sep">·</span>Nigerian bank accounts<span class="ticker-sep">·</span>MCP · Model Context Protocol<span class="ticker-sep">·</span>grampay_execute_cashout<span class="ticker-sep">·</span>
-      </span>
+    <!-- TICKER -->
+    <div class="ticker" aria-hidden="true">
+      <span class="ticker-track" id="ticker-track"></span>
     </div>
 
-    <hr class="rule sheet" style="max-width:760px; margin-left:auto; margin-right:auto;">
-
-    <section class="sheet" id="what">
-      <div class="section-head reveal-init">
-        <span class="section-num">01</span>
-        <h2>What it actually does</h2>
-      </div>
-      <p class="body-text">
-        Off-ramping crypto to Naira usually means leaving the conversation, opening an
-        exchange, and manually walking through a withdrawal form. GramPay collapses that
-        into a tool call an AI agent can make directly — the same connector pattern
-        MoonPay's PayBox uses to let Claude and ChatGPT move money, applied to the
-        specific problem of getting crypto into a Nigerian bank account.
+    <!-- 01 WHAT IT DOES -->
+    <section class="strip" id="what">
+      <div class="sec-head reveal"><span class="sec-ref">01</span><h2>What it actually does</h2></div>
+      <p class="sec-lede reveal">
+        Off-ramping crypto to Naira usually means leaving the conversation, opening an exchange,
+        and walking a withdrawal form by hand. GramPay collapses that into a tool call your agent
+        makes directly — the connector pattern used to let AI move money, aimed at one job:
+        getting crypto into a Nigerian bank account.
       </p>
+      <div class="items">
+        <div class="item reveal"><span class="item-n">01</span><div><h3>Quote &amp; balance</h3><p>The agent reads your USDC balance and a live USDC → Naira rate before proposing an amount.</p></div></div>
+        <div class="item reveal"><span class="item-n">02</span><div><h3>Prepare, then execute</h3><p>A prepare step validates limits and issues a signed one-time token; execution redeems it. Nothing moves without both halves.</p></div></div>
+        <div class="item reveal"><span class="item-n">03</span><div><h3>Settle to a bank account</h3><p>Naira lands in a named Nigerian bank account through IvoryPay — and the agent can track the reference until it clears.</p></div></div>
+      </div>
+    </section>
 
-      <div class="line-items">
-        <div class="line-item reveal-init">
-          <span class="line-num">01</span>
+    <!-- THE FLOW -->
+    <section class="strip" id="flow">
+      <div class="sec-head reveal"><span class="sec-ref">→</span><h2>One conversation, four moves</h2></div>
+      <p class="sec-lede reveal">The full cash-out runs as a short, inspectable sequence. The prepare/execute split is the safety seam — a signed token has to change hands before any Naira does.</p>
+      <div class="flow reveal" id="pipe-wrap">
+        <div class="flow-eyebrow">grampay · cashout pipeline</div>
+        <div class="pipe" id="pipe">
+          <div class="node"><div class="node-dot"></div><div class="node-rail"></div><div class="node-k">grampay_get_quote</div><h4>Quote</h4><p>Live USDC → NGN rate for the amount, plus a balance check.</p></div>
+          <div class="node"><div class="node-dot"></div><div class="node-rail"></div><div class="node-k">grampay_prepare_cashout</div><h4>Prepare</h4><p>Validates limits, returns a signed one-time token.</p><span class="tag-safe">safety seam</span></div>
+          <div class="node"><div class="node-dot"></div><div class="node-rail"></div><div class="node-k">grampay_execute_cashout</div><h4>Execute</h4><p>Redeems the token and sends Naira to the bank account.</p></div>
+          <div class="node"><div class="node-dot"></div><div class="node-rail"></div><div class="node-k">check_transfer_status</div><h4>Settle</h4><p>Track the reference until IvoryPay clears it.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 CONNECT -->
+    <section class="strip" id="connect">
+      <div class="sec-head reveal"><span class="sec-ref">02</span><h2>Connect it in Claude</h2></div>
+      <p class="sec-lede reveal">GramPay runs as a remote MCP server over Streamable HTTP. Add it as a custom connector once, and cashing out becomes something you can just ask for.</p>
+
+      <div class="code reveal" id="code-block">
+        <button class="code-copy" id="code-copy" type="button">copy</button><span class="muted"># Claude → Settings → Connectors → Add custom connector</span><br>
+<span class="k">Name</span>  <span class="v">GramPay</span><br>
+<span class="k">URL</span>   <span class="v" id="code-url">https://grampay-mcp.up.railway.app/mcp?token=YOUR_MCP_AUTH_TOKEN</span><br>
+<span class="k">OAuth</span> <span class="muted">leave blank — auth travels in the URL token or a Bearer header</span></div>
+
+      <div class="steps reveal">
+        <div class="step"><p>Open <b>Claude → Settings → Connectors</b> and choose <b>Add custom connector</b>.</p></div>
+        <div class="step"><p>Paste the URL above, with your <code>MCP_AUTH_TOKEN</code> in place of the placeholder.</p></div>
+        <div class="step"><p>Save. The tools load automatically — then just ask, in plain words.</p></div>
+      </div>
+
+      <div class="say-head reveal">Then just talk to it</div>
+      <div class="say">
+        <div class="say-row reveal">
+          <span class="say-mark" aria-hidden="true">&ldquo;</span>
           <div>
-            <h3>Balance check</h3>
-            <p>The agent reads your available crypto balance before proposing a cash-out amount.</p>
+            <p class="say-line">How much naira is $100 of USDC worth right now?</p>
+            <p class="say-note">Reads your balance and a live rate. Nothing is committed.</p>
           </div>
         </div>
-        <div class="line-item reveal-init">
-          <span class="line-num">02</span>
+        <div class="say-row reveal">
+          <span class="say-mark" aria-hidden="true">&ldquo;</span>
           <div>
-            <h3>Cash out to NGN</h3>
-            <p>A single tool call initiates the transfer — crypto converted, Naira sent to a named bank account.</p>
+            <p class="say-line">Cash out $50 to my Access Bank account, 0123456789.</p>
+            <p class="say-note">Prepares a <b>signed one-time token</b>, shows you the exact figures, then settles only when you say go.</p>
           </div>
         </div>
-        <div class="line-item reveal-init">
-          <span class="line-num">03</span>
+        <div class="say-row reveal">
+          <span class="say-mark" aria-hidden="true">&ldquo;</span>
           <div>
-            <h3>Status tracking</h3>
-            <p>The agent (or you) can poll the transaction reference until it settles.</p>
+            <p class="say-line">Did that transfer land yet?</p>
+            <p class="say-note">Tracks the reference until IvoryPay clears it.</p>
+          </div>
+        </div>
+      </div>
+      <p class="tools-more reveal">You never name a tool. GramPay hands your assistant 13 of them and it picks the right one for each ask — always confirming before any Naira moves.</p>
+    </section>
+
+    <!-- SECURITY -->
+    <section class="strip" id="security">
+      <div class="vault reveal">
+        <div class="vault-eyebrow">Safeguards</div>
+        <h2>Built to be careful with money</h2>
+        <div class="vault-grid">
+          <div class="guard">
+            <div class="guard-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg></div>
+            <h4>Signed one-time tokens</h4>
+            <p><code>prepare</code> issues a JWT that expires in 5 minutes; <code>execute</code> must redeem it. Prepared transfers survive restarts and scale without a database.</p>
+          </div>
+          <div class="guard">
+            <div class="guard-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M5 8l7-5 7 5M4 12h16"/></svg></div>
+            <h4>Hard cashout cap</h4>
+            <p>Every payout is bounded by <code>GRAMPAY_MAX_CASHOUT_USD</code> — $1,000 by default. Amounts over the cap are refused before anything is signed.</p>
+          </div>
+          <div class="guard">
+            <div class="guard-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg></div>
+            <h4>Real banks only</h4>
+            <p>An anti-wallet filter keeps payouts pointed at licensed Nigerian bank accounts, never at arbitrary crypto addresses.</p>
+          </div>
+          <div class="guard">
+            <div class="guard-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h10"/><circle cx="18" cy="17" r="2.5"/></svg></div>
+            <h4>Two transports, one auth</h4>
+            <p>Streamable HTTP for remote connectors, stdio for local desktop. Both gated by a Bearer token you control.</p>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="sheet" id="connect">
-      <div class="section-head reveal-init">
-        <span class="section-num">02</span>
-        <h2>Connect it</h2>
-      </div>
-      <p class="body-text">
-        GramPay runs as a remote MCP server over Streamable HTTP. Add it as a custom
-        connector and the three tools below become available inside your conversation.
-      </p>
-
-      <div class="code-block reveal-init"><span class="muted"># Add as a custom connector</span><br>
-<span class="signal">URL</span>  <span class="str">https://[your-deployment].up.railway.app/mcp</span><br>
-<span class="signal">Auth</span> <span class="str">Bearer &lt;token&gt;</span></div>
-
-      <div class="callout reveal-init">
-        <strong>Status:</strong> the connector endpoint is built and tested locally.
-        Public deployment is the next step before this URL goes live — check the
-        <a href="https://github.com/TopeGramms/grampay-mcp-server">repo</a> for current status.
-      </div>
-
-      <div class="tool-list">
-        <div class="tool reveal-init">
-          <span class="tool-name">check_balance</span>
-          <span class="tool-desc">Returns available balance across supported tokens, with a fiat equivalent.</span>
-        </div>
-        <div class="tool reveal-init">
-          <span class="tool-name">cashout_to_ngn</span>
-          <span class="tool-desc">Initiates a crypto-to-Naira transfer to a named bank account.</span>
-        </div>
-        <div class="tool reveal-init">
-          <span class="tool-name">check_transfer_status</span>
-          <span class="tool-desc">Looks up the current state of a transfer by its reference.</span>
-        </div>
-      </div>
-    </section>
-
-    <section class="sheet" id="providers">
-      <div class="section-head reveal-init">
-        <span class="section-num">03</span>
-        <h2>Provider ledger</h2>
-      </div>
-      <p class="body-text">
-        Three off-ramp providers were evaluated on fee and access. Access, not fee, ended
-        up deciding what's live today — this table is kept honest on purpose.
-      </p>
-
-      <table class="ledger-table reveal-init">
-        <thead>
-          <tr><th>Provider</th><th>Fee</th><th>Access requirement</th><th>Status</th></tr>
-        </thead>
+    <!-- 03 PROVIDER LEDGER -->
+    <section class="strip" id="providers">
+      <div class="sec-head reveal"><span class="sec-ref">03</span><h2>Provider ledger</h2></div>
+      <p class="sec-lede reveal">Three off-ramp providers were evaluated on fee and access. Access — not fee — decided what's live today. This table is kept honest on purpose.</p>
+      <table class="ltable reveal">
+        <thead><tr><th>Provider</th><th>Fee</th><th>Access</th><th>Status</th></tr></thead>
         <tbody>
-          <tr>
-            <td class="provider-name">IvoryPay</td>
-            <td class="mono">1%</td>
-            <td>Personal KYC</td>
-            <td><span class="tag tag-live">Live</span></td>
-          </tr>
-          <tr>
-            <td class="provider-name">Breet</td>
-            <td class="mono">0.5%</td>
-            <td>Full company KYB</td>
-            <td><span class="tag tag-blocked">Blocked</span></td>
-          </tr>
-          <tr>
-            <td class="provider-name">Quidax Ramp</td>
-            <td class="mono">₦200 flat</td>
-            <td>Full company KYB</td>
-            <td><span class="tag tag-blocked">Blocked</span></td>
-          </tr>
+          <tr><td class="prov">IvoryPay</td><td class="mono">1%</td><td>Personal KYC</td><td><span class="tag tag-live">Live</span></td></tr>
+          <tr><td class="prov">Breet</td><td class="mono">0.5%</td><td>Company KYB</td><td><span class="tag tag-wait">Post-incorp</span></td></tr>
+          <tr><td class="prov">Quidax Ramp</td><td class="mono">₦200 flat</td><td>Company KYB</td><td><span class="tag tag-wait">Post-incorp</span></td></tr>
         </tbody>
       </table>
     </section>
 
-    <section class="sheet" id="roadmap">
-      <div class="section-head reveal-init">
-        <span class="section-num">04</span>
-        <h2>Roadmap</h2>
-      </div>
-
-      <div class="roadmap">
-        <div class="stage active reveal-init">
-          <span class="stage-tag">NOW</span>
-          <h4>Solo operator, single provider</h4>
-          <p>Live on IvoryPay. One user — the operator is also the fund owner.</p>
-        </div>
-        <div class="stage reveal-init">
-          <span class="stage-tag">NEXT</span>
-          <h4>Public connector deployment</h4>
-          <p>Streamable HTTP server deployed with token auth, addable as a real Claude connector.</p>
-        </div>
-        <div class="stage reveal-init">
-          <span class="stage-tag">THEN</span>
-          <h4>Incorporation</h4>
-          <p>Unlocks Breet and Quidax Ramp access, and lower fees at volume.</p>
-        </div>
-        <div class="stage reveal-init">
-          <span class="stage-tag">LATER</span>
-          <h4>Multi-user, prepare/approve/execute</h4>
-          <p>A confirmation step between the AI proposing a transfer and it actually executing.</p>
-        </div>
+    <!-- 04 ROADMAP -->
+    <section class="strip" id="roadmap">
+      <div class="sec-head reveal"><span class="sec-ref">04</span><h2>Roadmap</h2></div>
+      <div class="road">
+        <div class="stage now reveal"><span class="stage-tag">Now · shipped</span><h4>Live connector on IvoryPay</h4><p>Deployed over Streamable HTTP, addable in Claude, with signed-token safety and a hard cashout cap.</p></div>
+        <div class="stage reveal"><span class="stage-tag">Next</span><h4>Live-key volume, higher limits</h4><p>Graduate from test-key validation to real-money throughput and raise caps as trust builds.</p></div>
+        <div class="stage reveal"><span class="stage-tag">Then</span><h4>Incorporation</h4><p>Unlocks Breet and Quidax Ramp — lower fees at volume.</p></div>
+        <div class="stage reveal"><span class="stage-tag">Later</span><h4>Multi-user prepare / approve / execute</h4><p>A human approval step between an agent proposing a transfer and it executing, for teams.</p></div>
       </div>
     </section>
 
-    <section class="sheet" id="honest" style="padding-bottom: 8px;">
-      <div class="section-head reveal-init">
-        <span class="section-num">05</span>
-        <h2>Where things stand, plainly</h2>
-      </div>
-      <div class="disclosure reveal-init">
-        <strong>Current limitations:</strong>
+    <!-- 05 BOUNDARIES -->
+    <section class="strip" id="boundaries" style="padding-bottom: 4px;">
+      <div class="sec-head reveal"><span class="sec-ref">05</span><h2>Where it stands, plainly</h2></div>
+      <div class="bounds reveal">
+        <h3>Operating boundaries, today</h3>
         <ul>
-          <li>Validated in IvoryPay test mode end-to-end; live-key transactions are the next real-money milestone.</li>
-          <li>No multi-user support yet — there's no approval layer between an agent's request and execution.</li>
-          <li>Pre-incorporation, which is the reason Breet and Quidax aren't connected yet.</li>
+          <li><b>Single operator.</b> One fund owner today; the multi-user approval layer is on the roadmap, not shipped.</li>
+          <li><b>IvoryPay is the live rail.</b> Validated end-to-end; Breet and Quidax open after incorporation.</li>
+          <li><b>Hard $1,000 cap</b> per cashout while volume ramps — raised deliberately, not automatically.</li>
         </ul>
       </div>
     </section>
   </main>
 
   <footer>
-    <div class="sheet">
+    <div class="strip foot-in">
       <div>
-        <div class="brand"><span class="brand-mark">Gram</span>Pay</div>
-        <p>An MCP server for crypto-to-Naira cash-outs. Built solo in Nigeria, part of the Superteam Nigeria ecosystem.</p>
+        <div class="brand">
+          <svg class="brand-glyph" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#16281F"/><path d="M9 6h14v20l-2.3-1.6L18.3 26l-2.3-1.6L13.7 26l-2.4-1.6L9 26z" fill="#EDE7D6"/><path d="M12.5 11.5h7M12.5 15h7M12.5 18.5h4.2" stroke="#18C46C" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <span><span class="g">Gram</span>Pay</span>
+        </div>
+        <p>An MCP connector for crypto-to-Naira cash-outs. Built solo in Nigeria, in the Superteam Nigeria ecosystem.</p>
       </div>
-      <div class="foot-links">
-        <a href="https://github.com/TopeGramms/grampay-mcp-server">GitHub</a>
-        <a href="https://x.com/TopeGramms">X</a>
+      <div class="foot-links" id="contact">
+        <a href="https://wa.me/2349135428476">WhatsApp</a>
+        <a href="mailto:grampayhq@gmail.com">grampayhq@gmail.com</a>
+        <a href="https://x.com/TopeGramms">X / Twitter</a>
       </div>
     </div>
-    <div class="sheet foot-print">grampay-mcp-server · solo-operator build · test-mode validated</div>
+    <div class="strip foot-meta">
+      <span>GramPay · source available on request</span>
+      <span>MCP · Streamable HTTP · IvoryPay</span>
+    </div>
   </footer>
 
-  <div class="perf"></div>
+  <div class="tear tear-bottom"></div>
 </div>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
-    var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+(function () {
+  "use strict";
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var NGN = 165000;
 
-    // ---- Floating money particles ----
-    var particleContainer = document.getElementById('money-particles');
-    var symbols = ['₦', '₦', '₦', '₦', '$', '₿', '₦', 'NGN', '$'];
-    var pColors = ['var(--naira)', 'var(--naira)', 'var(--naira)', 'var(--amber)', 'var(--signal)'];
+  function fmtNGN(v) { return "₦" + Math.round(v).toLocaleString("en-NG") + ".00"; }
 
-    function spawnParticle() {
-      if (reduceMotion || !particleContainer) return;
-      var el = document.createElement('span');
-      el.className = 'money-particle';
-      el.textContent = symbols[Math.floor(Math.random() * symbols.length)];
-      var size = (0.65 + Math.random() * 0.75).toFixed(2);
-      el.style.fontSize = size + 'rem';
-      el.style.left = (4 + Math.random() * 92) + '%';
-      el.style.bottom = '-24px';
-      var dur = (6 + Math.random() * 9).toFixed(1);
-      var delay = (Math.random() * 3).toFixed(1);
-      el.style.animationDuration = dur + 's';
-      el.style.animationDelay = delay + 's';
-      el.style.setProperty('--mpeak', (0.07 + Math.random() * 0.1).toFixed(3));
-      el.style.color = pColors[Math.floor(Math.random() * pColors.length)];
-      particleContainer.appendChild(el);
-      setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); },
-        (parseFloat(dur) + parseFloat(delay) + 1) * 1000);
+  /* ---- Rate ticker (built once, duplicated for seamless loop) ---- */
+  (function () {
+    var track = document.getElementById("ticker-track");
+    if (!track) return;
+    var bits = [
+      '<span class="em">1 USDC</span> = <span class="em">₦1,650</span>',
+      "Crypto → Naira, from a tool call",
+      '<span class="em">IvoryPay</span> settlement',
+      "signed one-time tokens",
+      "USDT → NGN", "BTC → NGN", "ETH → NGN",
+      "$1,000 cashout cap",
+      "grampay_execute_cashout",
+      "real Nigerian bank accounts",
+      "MCP · Streamable HTTP"
+    ];
+    var unit = bits.join('<span class="sep">·</span>') + '<span class="sep">·</span>';
+    track.innerHTML = unit + unit;
+  })();
+
+  /* ---- Scroll reveal ---- */
+  (function () {
+    var els = Array.prototype.slice.call(document.querySelectorAll(".reveal"));
+    if (reduce || !("IntersectionObserver" in window)) {
+      els.forEach(function (el) { el.classList.add("in"); });
+      return;
     }
-
-    if (!reduceMotion) {
-      for (var pi = 0; pi < 10; pi++) setTimeout(spawnParticle, pi * 500);
-      setInterval(spawnParticle, 1600);
-    }
-
-    // ---- Amount counter ----
-    var amountEl = document.getElementById('amount-val');
-    function animateCount(from, to, dur, el) {
-      if (!el) return;
-      var start = null;
-      function step(ts) {
-        if (!start) start = ts;
-        var p = Math.min((ts - start) / dur, 1);
-        var v = Math.round(from + (to - from) * p);
-        el.textContent = '₦ ' + v.toLocaleString() + '.00';
-        if (p < 1) requestAnimationFrame(step);
-      }
-      requestAnimationFrame(step);
-    }
-
-    // ---- Coin burst ----
-    function spawnBurst(anchor) {
-      if (reduceMotion || !anchor) return;
-      var rect = anchor.getBoundingClientRect();
-      var cx = rect.left + rect.width / 2;
-      var cy = rect.top + rect.height / 2;
-      var bColors = ['#A8752A', '#D4A847', '#1C7A4B', '#4ADE80', '#F5D06C'];
-      for (var k = 0; k < 10; k++) {
-        var c = document.createElement('div');
-        c.className = 'cburst';
-        var angle = (k / 10) * 2 * Math.PI;
-        var dist = 26 + Math.random() * 22;
-        c.style.setProperty('--bx', (Math.cos(angle) * dist).toFixed(1) + 'px');
-        c.style.setProperty('--by', (Math.sin(angle) * dist).toFixed(1) + 'px');
-        c.style.left = cx + 'px';
-        c.style.top  = cy + 'px';
-        c.style.background = bColors[k % bColors.length];
-        c.style.animationDelay = (k * 0.025).toFixed(3) + 's';
-        document.body.appendChild(c);
-        setTimeout(function (el) { if (el.parentNode) el.parentNode.removeChild(el); }, 900, c);
-      }
-    }
-
-    // ---- Hero entrance: staggered fade/rise on load ----
-    var heroEls = document.querySelectorAll('.hero-anim');
-    heroEls.forEach(function (el, i) {
-      if (reduceMotion) { el.classList.add('in-view'); return; }
-      el.style.transitionDelay = (i * 90) + 'ms';
-      requestAnimationFrame(function () {
-        requestAnimationFrame(function () { el.classList.add('in-view'); });
-      });
+    var groups = new WeakMap();
+    els.forEach(function (el) {
+      var p = el.parentElement;
+      var i = groups.get(p) || 0;
+      el.style.transitionDelay = Math.min(i * 65, 260) + "ms";
+      groups.set(p, i + 1);
     });
-
-    // ---- Scroll reveal for everything else ----
-    var scrollEls = document.querySelectorAll('.reveal-init:not(.hero-anim)');
-    if (reduceMotion || !('IntersectionObserver' in window)) {
-      scrollEls.forEach(function (el) { el.classList.add('in-view'); });
-    } else {
-      var counters = new WeakMap();
-      scrollEls.forEach(function (el) {
-        var parent = el.parentElement;
-        var idx = counters.get(parent) || 0;
-        el.style.transitionDelay = Math.min(idx * 70, 280) + 'ms';
-        counters.set(parent, idx + 1);
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
       });
+    }, { threshold: 0.14, rootMargin: "0px 0px -50px 0px" });
+    els.forEach(function (el) { io.observe(el); });
+  })();
 
-      var io = new IntersectionObserver(function (entries) {
-        entries.forEach(function (entry) {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('in-view');
-            io.unobserve(entry.target);
-          }
+  /* ---- Pipeline flow-in on scroll ---- */
+  (function () {
+    var pipe = document.getElementById("pipe");
+    if (!pipe) return;
+    var nodes = Array.prototype.slice.call(pipe.querySelectorAll(".node"));
+    function light() {
+      nodes.forEach(function (n, i) {
+        setTimeout(function () {
+          n.classList.add("lit");
+          if (!reduce) n.classList.add("flowed");
+        }, reduce ? 0 : i * 260);
+      });
+    }
+    if (reduce || !("IntersectionObserver" in window)) { light(); return; }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { if (e.isIntersecting) { light(); io.disconnect(); } });
+    }, { threshold: 0.4 });
+    io.observe(pipe);
+  })();
+
+  /* ---- Copy helpers ---- */
+  function copy(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text);
+    return new Promise(function (res, rej) {
+      try {
+        var t = document.createElement("textarea");
+        t.value = text; t.style.position = "fixed"; t.style.opacity = "0";
+        document.body.appendChild(t); t.select(); document.execCommand("copy");
+        document.body.removeChild(t); res();
+      } catch (e) { rej(e); }
+    });
+  }
+  function connectorURL() {
+    var el = document.getElementById("code-url");
+    return el ? el.textContent.trim() : "";
+  }
+
+  var cta = document.getElementById("connect-cta");
+  if (cta) {
+    cta.addEventListener("click", function () {
+      copy(connectorURL()).then(function () {
+        cta.classList.add("is-copied");
+        setTimeout(function () { cta.classList.remove("is-copied"); }, 2200);
+      }).catch(function () {});
+      var connect = document.getElementById("connect");
+      if (connect) connect.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+    });
+  }
+  var codeCopy = document.getElementById("code-copy");
+  if (codeCopy) {
+    codeCopy.addEventListener("click", function () {
+      copy(connectorURL()).then(function () {
+        codeCopy.textContent = "copied ✓"; codeCopy.classList.add("is-copied");
+        setTimeout(function () { codeCopy.textContent = "copy"; codeCopy.classList.remove("is-copied"); }, 2000);
+      }).catch(function () {});
+    });
+  }
+
+  /* ---- Signature: the printing settlement receipt ---- */
+  (function () {
+    var body = document.getElementById("receipt-body");
+    if (!body) return;
+    var lines = Array.prototype.slice.call(body.querySelectorAll("[data-line]"));
+    var amountEl = document.getElementById("rcpt-amount");
+    var refEl = document.getElementById("rcpt-ref");
+    var statusEl = document.getElementById("rcpt-status");
+    var stamp = document.getElementById("stamp");
+    var head = document.getElementById("print-head");
+    var timers = [];
+    function clearAll() { timers.forEach(clearTimeout); timers = []; }
+    function after(ms, fn) { timers.push(setTimeout(fn, ms)); }
+
+    function finalRef() {
+      return "1785" + Math.floor(100000 + Math.random() * 899999);
+    }
+
+    if (reduce) {
+      lines.forEach(function (l) { l.classList.add("printed"); });
+      amountEl.textContent = fmtNGN(NGN);
+      refEl.textContent = finalRef();
+      statusEl.innerHTML = "settled";
+      stamp.style.opacity = "1"; stamp.style.transform = "rotate(-11deg) scale(1)";
+      return;
+    }
+
+    function count(to, dur) {
+      var start = null;
+      function frame(ts) {
+        if (start === null) start = ts;
+        var p = Math.min((ts - start) / dur, 1);
+        var e = 1 - Math.pow(1 - p, 3);
+        amountEl.textContent = fmtNGN(to * e);
+        if (p < 1) requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    }
+
+    function scrambleRef(finalVal, dur) {
+      var startT = Date.now();
+      function tickR() {
+        var elapsed = Date.now() - startT;
+        if (elapsed >= dur) { refEl.textContent = finalVal; return; }
+        var s = "1785";
+        for (var i = 0; i < 6; i++) s += Math.floor(Math.random() * 10);
+        refEl.textContent = s;
+        after(45, tickR);
+      }
+      tickR();
+    }
+
+    function reset() {
+      clearAll();
+      lines.forEach(function (l) { l.classList.remove("printed"); });
+      amountEl.textContent = "₦0.00";
+      refEl.textContent = "1785······";
+      statusEl.innerHTML = 'processing<span style="color:var(--naira-bright)">_</span>';
+      stamp.classList.remove("pressed"); stamp.style.opacity = "0";
+      head.style.transition = "none"; head.style.opacity = "0"; head.style.top = "0";
+    }
+
+    function run() {
+      reset();
+      // print head sweep
+      after(60, function () {
+        head.style.transition = "top 2.1s linear, opacity 0.3s";
+        head.style.opacity = "0.9"; head.style.top = "100%";
+        after(2100, function () { head.style.opacity = "0"; });
+      });
+      // reveal lines in sequence
+      lines.forEach(function (l, i) {
+        after(180 + i * 230, function () {
+          l.classList.add("printed");
+          if (l.querySelector("#rcpt-amount")) count(NGN, 900);
+          if (l.querySelector("#rcpt-ref")) scrambleRef(finalRef(), 650);
         });
-      }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
-
-      scrollEls.forEach(function (el) { io.observe(el); });
+      });
+      // settle
+      var settleAt = 180 + lines.length * 230 + 350;
+      after(settleAt, function () {
+        statusEl.innerHTML = "settled";
+        stamp.classList.add("pressed");
+      });
+      // hold, then loop
+      after(settleAt + 3600, run);
     }
 
-    // ---- Ledger cycle: the "stamp of approval" moment ----
-    var pill = document.getElementById('status-pill');
-    var text = document.getElementById('status-text');
-    var ref = document.getElementById('ref-val');
-    var check = document.getElementById('status-check');
-
-    function randomRef() {
-      return Math.floor(1780000000 + Math.random() * 9000000);
+    // Kick off when hero receipt is on screen
+    if ("IntersectionObserver" in window) {
+      var seen = false;
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting && !seen) { seen = true; run(); }
+        });
+      }, { threshold: 0.35 });
+      io.observe(document.getElementById("receipt"));
+    } else {
+      run();
     }
-
-    function runCycle() {
-      pill.classList.remove('status-success', 'stamp-pop');
-      check.classList.remove('show');
-      pill.classList.add('status-pending');
-      text.textContent = 'PENDING';
-      ref.textContent = randomRef() + '…';
-
-      setTimeout(function () {
-        pill.classList.remove('status-pending');
-        pill.classList.add('status-success');
-        text.textContent = 'SUCCESS';
-
-        if (!reduceMotion) {
-          void pill.offsetWidth; // restart animation
-          pill.classList.add('stamp-pop');
-          setTimeout(function () {
-            check.classList.add('show');
-            spawnBurst(pill);
-          }, 180);
-          animateCount(0, 165000, 900, amountEl);
-        } else {
-          check.classList.add('show');
-        }
-      }, 2200);
-    }
-
-    runCycle();
-    setInterval(runCycle, 6000);
-  });
+  })();
+})();
 </script>
 
 </body>
