@@ -199,6 +199,10 @@ app.get("/health", (_req: Request, res: Response) => {
   });
 });
 
+app.get("/iconcraft-1788533688048.png", (_req: Request, res: Response) => {
+  res.sendFile(path.join(process.cwd(), "iconcraft-1788533688048.png"));
+});
+
 import path from "path";
 import fs from "fs";
 
