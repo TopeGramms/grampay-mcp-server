@@ -7,7 +7,7 @@ async function run() {
         const r = await fetch('https://api.ivorypay.io/api/v1/transactions', {
             method: 'POST',
             headers: { Authorization: process.env.IVORYPAY_SECRET_KEY, 'Content-Type': 'application/json', 'x-env': 'test' },
-            body: JSON.stringify({ amount: 500, email: 'demo@grampay.org', firstName: 'Adekalu', lastName: 'Temitope', type: 'FIAT', baseFiat: 'NGN', reference: crypto.randomUUID() })
+            body: JSON.stringify({ amount: 500, email: 'demo@grampay.org', firstName: 'Adekalu', lastName: 'Temitope', type: 'FIAT', baseFiat: 'NGN', reference: crypto.randomUUID(), mode: 'API', crypto: 'USDC' })
         });
         const text = await r.text();
         fs.writeFileSync('error_dump.txt', `Status: ${r.status}\nBody: ${text}`);

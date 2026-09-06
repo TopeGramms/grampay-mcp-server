@@ -89,31 +89,6 @@ export class IvoryPayClient {
     });
   }
 
-  async createFiatTransfer(params: CreateFiatTransferParams): Promise<FiatTransferResponse> {
-    // In test mode, IvoryPay sandbox might fail on dummy real-world bank codes/accounts.
-    // Return a mock successful payout for the default test account to allow workflow testing.
-    if (this.env === "test" && params.accountNumber === "0123456789") {
-      return {
-        id: `mock_fiat_${crypto.randomUUID()}`,
-        reference: params.reference,
-        status: "SUCCESS",
-        amount: params.amount,
-        token: params.token ?? "USDC",
-        fiatCurrency: params.fiatCurrency ?? "NGN"
-      };
-    }
-
-    return this.request<FiatTransferResponse>("POST", "/fiat-transfer", {
-      amount: params.amount,
-      token: params.token ?? "USDC",
-      fiatCurrency: params.fiatCurrency ?? "NGN",
-      payoutMethod: params.payoutMethod ?? "BANK_TRANSFER",
-      accountNumber: params.accountNumber,
-      bankCode: params.bankCode,
-      reference: params.reference,
-    });
-  }
-
   async simulatePayment(reference: string): Promise<{ status: string }> {
     return this.request<{ status: string }>("POST", "/fiat-transfer/simulate", {
       reference,
@@ -237,45 +212,6 @@ export interface BankListEntry {
   code: string;
   country: string;
   currency: string;
-}
-
-export type PayoutMethod = "BANK_TRANSFER" | "MOBILE_MONEY";
-
-export interface CreateFiatTransferParams {
-  /** Amount denominated in the crypto token (not fiat). Must be positive. */
-  amount: number;
-  token?: "USDC" | "USDT";
-  /** Target fiat for the recipient, e.g. "NGN". */
-  fiatCurrency?: string;
-  payoutMethod?: PayoutMethod;
-  accountNumber: string;
-  /** Bank code (> 3 chars) — resolve from a bank name via the bank directory. */
-  bankCode: string;
-  /** Unique per transfer. IvoryPay uses this as the idempotency key. */
-  reference: string;
-}
-
-export interface FiatTransferResponse {
-  id: string;
-  reference: string;
-  /** Lifecycle: PENDING → PROCESSING → SUCCESS ↘ FAILED */
-  status: string;
-  amount?: number;
-  token?: string;
-  fiatCurrency?: string;
-}
-
-export interface AccountResolutionParams {
-  accountNumber: string;
-  bankCode: string;
-  /** ⚠️ Named `currency` on this endpoint, not `fiatCurrency`. Defaults to "NGN". */
-  currency?: string;
-}
-
-export interface AccountResolutionResponse {
-  accountName: string;
-  accountNumber: string;
-  bankCode: string;
 }
 
 export type PayoutMethod = "BANK_TRANSFER" | "MOBILE_MONEY";
