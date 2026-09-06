@@ -30,6 +30,13 @@ export function buildMcpServer(): Server {
     {
       name: "grampay-mcp-server",
       version: "0.1.0",
+      icons: [
+        {
+          src: "https://grampay-mcp-server.onrender.com/iconcraft-1788533688048.png",
+          mimeType: "image/png",
+          sizes: ["768x768"],
+        },
+      ],
     },
     {
       capabilities: {
