@@ -73,13 +73,25 @@ export const TOOLS = [
                     type: "string",
                     description: "Recipient's 10-digit Nigerian bank account number. Required unless a default account is configured server-side.",
                 },
+                account_number: {
+                    type: "string",
+                    description: "Alias for accountNumber.",
+                },
                 bankName: {
                     type: "string",
                     description: "Bank name, e.g. Access Bank (provide this or bankCode).",
                 },
+                bank_name: {
+                    type: "string",
+                    description: "Alias for bankName.",
+                },
                 bankCode: {
                     type: "string",
                     description: "Bank code, e.g. 044 (provide this or bankName).",
+                },
+                bank_code: {
+                    type: "string",
+                    description: "Alias for bankCode.",
                 },
             },
             required: ["amount_usd"],

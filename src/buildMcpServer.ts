@@ -71,9 +71,24 @@ export function buildMcpServer(): Server {
           if (typeof args.amount_usd !== "number") throw new Error("amount_usd must be a number");
           result = await handlers.handlePrepareCashout({
             amount_usd: args.amount_usd,
-            accountNumber: typeof args.accountNumber === "string" ? args.accountNumber : undefined,
-            bankName: typeof args.bankName === "string" ? args.bankName : undefined,
-            bankCode: typeof args.bankCode === "string" ? args.bankCode : undefined,
+            accountNumber:
+              typeof args.accountNumber === "string"
+                ? args.accountNumber
+                : typeof args.account_number === "string"
+                  ? args.account_number
+                  : undefined,
+            bankName:
+              typeof args.bankName === "string"
+                ? args.bankName
+                : typeof args.bank_name === "string"
+                  ? args.bank_name
+                  : undefined,
+            bankCode:
+              typeof args.bankCode === "string"
+                ? args.bankCode
+                : typeof args.bank_code === "string"
+                  ? args.bank_code
+                  : undefined,
           });
           break;
         case "grampay_execute_cashout":

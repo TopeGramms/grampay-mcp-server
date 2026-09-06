@@ -8,8 +8,11 @@ export declare const TOOLS: ({
             country?: never;
             amount_usd?: never;
             accountNumber?: never;
+            account_number?: never;
             bankName?: never;
+            bank_name?: never;
             bankCode?: never;
+            bank_code?: never;
             prepare_token?: never;
             tx_id?: never;
             amount?: never;
@@ -38,8 +41,11 @@ export declare const TOOLS: ({
             country?: never;
             amount_usd?: never;
             accountNumber?: never;
+            account_number?: never;
             bankName?: never;
+            bank_name?: never;
             bankCode?: never;
+            bank_code?: never;
             prepare_token?: never;
             tx_id?: never;
             amount?: never;
@@ -68,8 +74,11 @@ export declare const TOOLS: ({
             query?: never;
             amount_usd?: never;
             accountNumber?: never;
+            account_number?: never;
             bankName?: never;
+            bank_name?: never;
             bankCode?: never;
+            bank_code?: never;
             prepare_token?: never;
             tx_id?: never;
             amount?: never;
@@ -98,8 +107,11 @@ export declare const TOOLS: ({
             query?: never;
             country?: never;
             accountNumber?: never;
+            account_number?: never;
             bankName?: never;
+            bank_name?: never;
             bankCode?: never;
+            bank_code?: never;
             prepare_token?: never;
             tx_id?: never;
             amount?: never;
@@ -129,11 +141,23 @@ export declare const TOOLS: ({
                 type: string;
                 description: string;
             };
+            account_number: {
+                type: string;
+                description: string;
+            };
             bankName: {
                 type: string;
                 description: string;
             };
+            bank_name: {
+                type: string;
+                description: string;
+            };
             bankCode: {
+                type: string;
+                description: string;
+            };
+            bank_code: {
                 type: string;
                 description: string;
             };
@@ -168,8 +192,11 @@ export declare const TOOLS: ({
             country?: never;
             amount_usd?: never;
             accountNumber?: never;
+            account_number?: never;
             bankName?: never;
+            bank_name?: never;
             bankCode?: never;
+            bank_code?: never;
             tx_id?: never;
             amount?: never;
             exchange_rate?: never;
@@ -198,8 +225,11 @@ export declare const TOOLS: ({
             country?: never;
             amount_usd?: never;
             accountNumber?: never;
+            account_number?: never;
             bankName?: never;
+            bank_name?: never;
             bankCode?: never;
+            bank_code?: never;
             prepare_token?: never;
             amount?: never;
             exchange_rate?: never;
@@ -270,6 +300,9 @@ export declare const TOOLS: ({
             };
             query?: never;
             country?: never;
+            account_number?: never;
+            bank_name?: never;
+            bank_code?: never;
             prepare_token?: never;
             tx_id?: never;
             type?: never;
@@ -291,8 +324,11 @@ export declare const TOOLS: ({
             country?: never;
             amount_usd?: never;
             accountNumber?: never;
+            account_number?: never;
             bankName?: never;
+            bank_name?: never;
             bankCode?: never;
+            bank_code?: never;
             prepare_token?: never;
             tx_id?: never;
             amount?: never;
@@ -343,8 +379,11 @@ export declare const TOOLS: ({
             country?: never;
             amount_usd?: never;
             accountNumber?: never;
+            account_number?: never;
             bankName?: never;
+            bank_name?: never;
             bankCode?: never;
+            bank_code?: never;
             prepare_token?: never;
             tx_id?: never;
             exchange_rate?: never;
@@ -367,8 +406,11 @@ export declare const TOOLS: ({
             country?: never;
             amount_usd?: never;
             accountNumber?: never;
+            account_number?: never;
             bankName?: never;
+            bank_name?: never;
             bankCode?: never;
+            bank_code?: never;
             prepare_token?: never;
             tx_id?: never;
             amount?: never;
