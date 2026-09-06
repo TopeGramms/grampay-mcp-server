@@ -50,13 +50,9 @@ async function main() {
 
     console.log("Execute result:", JSON.stringify(executeResult, null, 2));
 
-    let txId = "";
-    try {
-      const data = JSON.parse(executeResult.content[0].text);
-      txId = data.tx_id;
-    } catch (e) {
-      console.error("Could not parse tx_id");
-    }
+    const receiptText = executeResult.content?.[0]?.text ?? "";
+    const txId = receiptText.match(/^Transaction:\s+(.+)$/m)?.[1] ?? "";
+    if (!txId) console.error("Could not parse tx_id from receipt");
 
     if (txId) {
       // Get Status

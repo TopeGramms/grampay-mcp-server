@@ -20,6 +20,41 @@ const mockState = {
   completed_txs: new Map<string, CompletedTx>(),
 };
 
+function cashoutReceipt(params: {
+  txId: string;
+  reference: string;
+  amountUsdc: number;
+  estimatedNgn: number;
+  destination: string;
+  accountName: string;
+  status: string;
+  timestamp: string;
+  mode: "MOCK" | "LIVE";
+}) {
+  return {
+    content: [
+      {
+        type: "text" as const,
+        text: [
+          "================================",
+          "           GRAMPAY RECEIPT",
+          "================================",
+          `Status:       ${params.status}`,
+          `Mode:         ${params.mode}`,
+          `Transaction:  ${params.txId}`,
+          `Reference:    ${params.reference}`,
+          `USDC debited: ${params.amountUsdc}`,
+          `NGN estimate: ${params.estimatedNgn.toLocaleString("en-NG")}`,
+          `Destination:  ${params.destination}`,
+          `Account name: ${params.accountName || "Not verified"}`,
+          `Time:         ${params.timestamp}`,
+          "================================",
+        ].join("\n"),
+      },
+    ],
+  };
+}
+
 export async function handleGetConfig() {
   return {
     mode: CONFIG.MODE,
@@ -157,18 +192,17 @@ export async function handleExecuteCashout(prepareToken: string) {
       status: "COMPLETED",
     });
 
-    return {
-      tx_id: prep.reference,
+    return cashoutReceipt({
+      txId: prep.reference,
       reference: prep.reference,
+      amountUsdc: prep.amount_usdc,
+      estimatedNgn: prep.estimated_ngn,
+      destination,
+      accountName: prep.account_name,
       status: "COMPLETED",
-      details: {
-        debit_usdc: prep.amount_usdc,
-        estimated_ngn: prep.estimated_ngn,
-        destination,
-        timestamp: new Date().toISOString(),
-      },
-      message: "[MOCK] ✅ Cash-out simulated — no real funds moved.",
-    };
+      timestamp: new Date().toISOString(),
+      mode: "MOCK",
+    });
   }
 
   // LIVE payout via POST /fiat-transfer (money OUT). See docs/IVORYPAY_NOTES.md.
@@ -182,17 +216,17 @@ export async function handleExecuteCashout(prepareToken: string) {
     reference: prep.reference,
   });
 
-  return {
-    tx_id: payout.id ?? prep.reference,
+  return cashoutReceipt({
+    txId: payout.id ?? prep.reference,
     reference: prep.reference,
+    amountUsdc: prep.amount_usdc,
+    estimatedNgn: prep.estimated_ngn,
+    destination,
+    accountName: prep.account_name,
     status: payout.status,
-    details: {
-      debit_usdc: prep.amount_usdc,
-      account_name: prep.account_name,
-      destination,
-    },
-    message: `Payout initiated (${payout.status}). Final settlement is confirmed via IvoryPay webhook.`,
-  };
+    timestamp: new Date().toISOString(),
+    mode: "LIVE",
+  });
 }
 
 export async function handleGetStatus(txId: string) {
