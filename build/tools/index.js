@@ -61,13 +61,25 @@ export const TOOLS = [
     },
     {
         name: "grampay_prepare_cashout",
-        description: "Prepare a cash-out transaction (validates limits, returns summary + token)",
+        description: "Step 1 of 2: validate a USDC→NGN bank payout, verify the recipient's account name, and return a signed token that locks the amount, destination, and idempotency reference for 5 minutes. You debit USDC; the NGN figure is an estimate — IvoryPay sets the real rate at settlement.",
         inputSchema: {
             type: "object",
             properties: {
                 amount_usd: {
                     type: "number",
-                    description: "Amount in USD to cash out",
+                    description: "Amount of USDC to debit (≈ USD). The NGN delivered is an estimate.",
+                },
+                accountNumber: {
+                    type: "string",
+                    description: "Recipient's 10-digit Nigerian bank account number. Required unless a default account is configured server-side.",
+                },
+                bankName: {
+                    type: "string",
+                    description: "Bank name, e.g. Access Bank (provide this or bankCode).",
+                },
+                bankCode: {
+                    type: "string",
+                    description: "Bank code, e.g. 044 (provide this or bankName).",
                 },
             },
             required: ["amount_usd"],

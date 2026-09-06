@@ -218,7 +218,7 @@ app.get("/", (_req: Request, res: Response) => {
       endpoint: "/mcp",
       health: "/health",
       auth: MCP_AUTH_TOKEN ? "Bearer token required" : "UNAUTHENTICATED (set MCP_AUTH_TOKEN)",
-      docs: "https://github.com/TopeGramms/grampay-mcp-server",
+      contact: "grampayhq@gmail.com",
     });
   }
 });

@@ -17,50 +17,58 @@ const client = new Client({ name: 'grampay-local-client', version: '1.0.0' }, { 
 async function main() {
   await client.connect(transport);
 
-  // Test: Create transaction → Simulate → Verify
-  const createResult = await client.callTool({
-    name: "create_transaction",
+  console.log("Connected to MCP server.");
+
+  // Test: Prepare cashout
+  console.log("\n[1] Testing grampay_prepare_cashout...");
+  const prepareResult = await client.callTool({
+    name: "grampay_prepare_cashout",
     arguments: {
-      amount: 5000,
-      email: "demo@grampay.org",
-      firstName: "Adekalu",
-      lastName: "Temitope",
-      type: "FIAT",
-      baseFiat: "NGN",
-      reference: crypto.randomUUID(),
+      amount_usd: 50,
+      bankName: "Access Bank",
+      accountNumber: "0123456789"
     },
   });
 
-  console.log("Transaction created:", JSON.stringify(createResult, null, 2));
+  console.log("Prepare result:", JSON.stringify(prepareResult, null, 2));
 
-  let reference = "";
+  let prepareToken = "";
   try {
-    const data = JSON.parse(createResult.content[createResult.content.length - 1].text);
-    reference = data.reference;
+    const data = JSON.parse(prepareResult.content[0].text);
+    prepareToken = data.prepare_token;
   } catch (e) {
-    if (!reference) {
-      try {
-        const data2 = JSON.parse(createResult.content[0].text);
-        reference = data2.reference;
-      } catch (e2) { }
-    }
+    console.error("Could not parse prepare token");
   }
 
-  // Simulate payment
-  const simulateResult = await client.callTool({
-    name: "simulate_payment",
-    arguments: { reference: reference },
-  });
+  if (prepareToken) {
+    // Execute cashout
+    console.log(`\n[2] Testing grampay_execute_cashout with token: ${prepareToken.substring(0, 20)}...`);
+    const executeResult = await client.callTool({
+      name: "grampay_execute_cashout",
+      arguments: { prepare_token: prepareToken },
+    });
 
-  console.log("Payment simulated:", JSON.stringify(simulateResult, null, 2));
+    console.log("Execute result:", JSON.stringify(executeResult, null, 2));
 
-  // Verify
-  const verifyResult = await client.callTool({
-    name: "verify_transaction",
-    arguments: { reference: reference },
-  });
+    let txId = "";
+    try {
+      const data = JSON.parse(executeResult.content[0].text);
+      txId = data.tx_id;
+    } catch (e) {
+      console.error("Could not parse tx_id");
+    }
 
-  console.log("Final status:", JSON.stringify(verifyResult, null, 2));
+    if (txId) {
+      // Get Status
+      console.log(`\n[3] Testing grampay_get_status for txId: ${txId}`);
+      const statusResult = await client.callTool({
+        name: "grampay_get_status",
+        arguments: { tx_id: txId },
+      });
+
+      console.log("Status result:", JSON.stringify(statusResult, null, 2));
+    }
+  }
 
   await transport.close();
 }

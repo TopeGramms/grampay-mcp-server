@@ -9,10 +9,19 @@
 import jwt from "jsonwebtoken";
 
 export interface PrepareTokenPayload {
-  amount_usd: number;
-  amount_ngn: number;
+  /** Idempotency key, locked at prepare time so execute retries never double-pay. */
+  reference: string;
+  /** Amount to debit, in USDC (token units). The caller specifies this. */
+  amount_usdc: number;
+  /** Display-only NGN estimate at prepare-time rate; IvoryPay sets the real rate. */
+  estimated_ngn: number;
+  rate_usd_ngn: number;
+  token: "USDC" | "USDT";
+  account_number: string;
+  bank_code: string;
   bank_name: string;
-  bank_account: string;
+  /** Recipient name resolved via account-resolution (empty in mock mode). */
+  account_name: string;
   timestamp: string;
 }
 
@@ -45,10 +54,15 @@ export function verifyPrepareToken(token: string): PrepareTokenPayload {
       exp?: number;
     };
     return {
-      amount_usd: decoded.amount_usd,
-      amount_ngn: decoded.amount_ngn,
+      reference: decoded.reference,
+      amount_usdc: decoded.amount_usdc,
+      estimated_ngn: decoded.estimated_ngn,
+      rate_usd_ngn: decoded.rate_usd_ngn,
+      token: decoded.token,
+      account_number: decoded.account_number,
+      bank_code: decoded.bank_code,
       bank_name: decoded.bank_name,
-      bank_account: decoded.bank_account,
+      account_name: decoded.account_name,
       timestamp: decoded.timestamp,
     };
   } catch (err) {

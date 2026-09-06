@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node \"C:/Users/gramms/.claude/skills/impeccable/scripts/detect.mjs\" --json design/receipt.html)",
+      "PowerShell(Start-Process \"c:\\\\Users\\\\gramms\\\\Desktop\\\\grampay-mcp-server\\\\grampay-mcp-server\\\\design\\\\receipt.html\")",
+      "Bash(\"/c/Program Files \\(x86\\)/Microsoft/Edge/Application/msedge.exe\" --headless=new --disable-gpu --no-sandbox --hide-scrollbars --user-data-dir=\"C:/Users/gramms/AppData/Local/Temp/edgeqa1\" --window-size=1120,5600 --screenshot=\"C:/Users/gramms/Desktop/grampay-mcp-server/grampay-mcp-server/_qa.png\" --virtual-time-budget=7000 \"file:///C:/Users/gramms/Desktop/grampay-mcp-server/grampay-mcp-server/grampay-landing.html\")",
+      "Bash(\"/c/Program Files \\(x86\\)/Microsoft/Edge/Application/msedge.exe\" --headless=new --disable-gpu --no-sandbox --hide-scrollbars --user-data-dir=\"C:/Users/gramms/AppData/Local/Temp/edgeqa2\" --window-size=430,2400 --screenshot=\"C:/Users/gramms/Desktop/grampay-mcp-server/grampay-mcp-server/_qa_mob.png\" --virtual-time-budget=7000 \"file:///C:/Users/gramms/Desktop/grampay-mcp-server/grampay-mcp-server/grampay-landing.html\")",
+      "Bash(\"/c/Program Files \\(x86\\)/Microsoft/Edge/Application/msedge.exe\" --headless=new --disable-gpu --no-sandbox --force-device-scale-factor=1 --user-data-dir=\"C:/Users/gramms/AppData/Local/Temp/edgeqa4\" --window-size=390,900 --virtual-time-budget=8000 --dump-dom \"file:///C:/Users/gramms/Desktop/grampay-mcp-server/grampay-mcp-server/_probe.html\")",
+      "Bash(\"/c/Program Files \\(x86\\)/Microsoft/Edge/Application/msedge.exe\" --headless=new --disable-gpu --no-sandbox --force-device-scale-factor=1 --user-data-dir=\"C:/Users/gramms/AppData/Local/Temp/edgeqa5\" --window-size=760,1000 --virtual-time-budget=9000 --dump-dom \"file:///C:/Users/gramms/Desktop/grampay-mcp-server/grampay-mcp-server/_frame.html\")"
+    ]
+  }
+}
