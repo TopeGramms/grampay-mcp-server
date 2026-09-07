@@ -31,24 +31,36 @@ function cashoutReceipt(params: {
   timestamp: string;
   mode: "MOCK" | "LIVE";
 }) {
+  const receipt = {
+    type: "grampay_receipt",
+    status: params.status,
+    mode: params.mode,
+    transaction_id: params.txId,
+    reference: params.reference,
+    amount_usdc: params.amountUsdc,
+    estimated_ngn: params.estimatedNgn,
+    destination: params.destination,
+    account_name: params.accountName || null,
+    timestamp: params.timestamp,
+  };
+
   return {
+    structuredContent: receipt,
     content: [
       {
         type: "text" as const,
         text: [
-          "================================",
-          "           GRAMPAY RECEIPT",
-          "================================",
-          `Status:       ${params.status}`,
-          `Mode:         ${params.mode}`,
-          `Transaction:  ${params.txId}`,
-          `Reference:    ${params.reference}`,
-          `USDC debited: ${params.amountUsdc}`,
-          `NGN estimate: ${params.estimatedNgn.toLocaleString("en-NG")}`,
-          `Destination:  ${params.destination}`,
-          `Account name: ${params.accountName || "Not verified"}`,
-          `Time:         ${params.timestamp}`,
-          "================================",
+          "## GramPay Receipt",
+          "",
+          `**Status:** ${params.status}`,
+          `**Mode:** ${params.mode}`,
+          `**Transaction:** \`${params.txId}\``,
+          `**Reference:** \`${params.reference}\``,
+          `**USDC debited:** ${params.amountUsdc}`,
+          `**Estimated NGN:** ${params.estimatedNgn.toLocaleString("en-NG")}`,
+          `**Destination:** ${params.destination}`,
+          `**Account name:** ${params.accountName || "Not verified"}`,
+          `**Time:** ${params.timestamp}`,
         ].join("\n"),
       },
     ],

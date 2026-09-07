@@ -101,7 +101,8 @@ export const TOOLS = [
   },
   {
     name: "grampay_execute_cashout",
-    description: "Execute cash-out (requires prepare token from previous step)",
+    description:
+      "Execute cash-out (requires prepare token from previous step). Returns a structured GramPay receipt with status, transaction ID, amount, destination, and timestamp.",
     inputSchema: {
       type: "object",
       properties: {
@@ -111,6 +112,32 @@ export const TOOLS = [
         },
       },
       required: ["prepare_token"],
+    },
+    outputSchema: {
+      type: "object",
+      properties: {
+        type: { type: "string" },
+        status: { type: "string" },
+        mode: { type: "string" },
+        transaction_id: { type: "string" },
+        reference: { type: "string" },
+        amount_usdc: { type: "number" },
+        estimated_ngn: { type: "number" },
+        destination: { type: "string" },
+        account_name: { type: ["string", "null"] },
+        timestamp: { type: "string" },
+      },
+      required: [
+        "type",
+        "status",
+        "mode",
+        "transaction_id",
+        "reference",
+        "amount_usdc",
+        "estimated_ngn",
+        "destination",
+        "timestamp",
+      ],
     },
   },
   {

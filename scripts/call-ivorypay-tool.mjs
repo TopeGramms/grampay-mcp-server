@@ -51,7 +51,9 @@ async function main() {
     console.log("Execute result:", JSON.stringify(executeResult, null, 2));
 
     const receiptText = executeResult.content?.[0]?.text ?? "";
-    const txId = receiptText.match(/^Transaction:\s+(.+)$/m)?.[1] ?? "";
+    const txId = executeResult.structuredContent?.transaction_id
+      ?? receiptText.match(/^\*\*Transaction:\*\* `([^`]+)`$/m)?.[1]
+      ?? "";
     if (!txId) console.error("Could not parse tx_id from receipt");
 
     if (txId) {
