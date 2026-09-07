@@ -59,29 +59,22 @@ export declare function handlePrepareCashout(params: {
  * same token sends the same reference and IvoryPay dedupes it.
  */
 export declare function handleExecuteCashout(prepareToken: string): Promise<{
-    tx_id: string;
-    reference: string;
-    status: string;
-    details: {
-        debit_usdc: number;
+    structuredContent: {
+        type: string;
+        status: string;
+        mode: "MOCK" | "LIVE";
+        transaction_id: string;
+        reference: string;
+        amount_usdc: number;
         estimated_ngn: number;
         destination: string;
+        account_name: string | null;
         timestamp: string;
-        account_name?: never;
     };
-    message: string;
-} | {
-    tx_id: string;
-    reference: string;
-    status: string;
-    details: {
-        debit_usdc: number;
-        account_name: string;
-        destination: string;
-        estimated_ngn?: never;
-        timestamp?: never;
-    };
-    message: string;
+    content: {
+        type: "text";
+        text: string;
+    }[];
 }>;
 export declare function handleGetStatus(txId: string): Promise<{
     tx_id: string;

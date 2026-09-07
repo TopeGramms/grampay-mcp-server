@@ -28,6 +28,7 @@ export declare const TOOLS: ({
         };
         required: never[];
     };
+    outputSchema?: never;
 } | {
     name: string;
     description: string;
@@ -61,6 +62,7 @@ export declare const TOOLS: ({
         };
         required: never[];
     };
+    outputSchema?: never;
 } | {
     name: string;
     description: string;
@@ -94,6 +96,7 @@ export declare const TOOLS: ({
         };
         required: never[];
     };
+    outputSchema?: never;
 } | {
     name: string;
     description: string;
@@ -127,6 +130,7 @@ export declare const TOOLS: ({
         };
         required: string[];
     };
+    outputSchema?: never;
 } | {
     name: string;
     description: string;
@@ -178,6 +182,7 @@ export declare const TOOLS: ({
         };
         required: string[];
     };
+    outputSchema?: never;
 } | {
     name: string;
     description: string;
@@ -208,6 +213,42 @@ export declare const TOOLS: ({
             narration?: never;
             type?: never;
             baseFiat?: never;
+        };
+        required: string[];
+    };
+    outputSchema: {
+        type: string;
+        properties: {
+            type: {
+                type: string;
+            };
+            status: {
+                type: string;
+            };
+            mode: {
+                type: string;
+            };
+            transaction_id: {
+                type: string;
+            };
+            reference: {
+                type: string;
+            };
+            amount_usdc: {
+                type: string;
+            };
+            estimated_ngn: {
+                type: string;
+            };
+            destination: {
+                type: string;
+            };
+            account_name: {
+                type: string[];
+            };
+            timestamp: {
+                type: string;
+            };
         };
         required: string[];
     };
@@ -244,6 +285,7 @@ export declare const TOOLS: ({
         };
         required: string[];
     };
+    outputSchema?: never;
 } | {
     name: string;
     description: string;
@@ -310,6 +352,7 @@ export declare const TOOLS: ({
         };
         required: string[];
     };
+    outputSchema?: never;
 } | {
     name: string;
     description: string;
@@ -343,6 +386,7 @@ export declare const TOOLS: ({
         };
         required: string[];
     };
+    outputSchema?: never;
 } | {
     name: string;
     description: string;
@@ -392,6 +436,7 @@ export declare const TOOLS: ({
         };
         required: string[];
     };
+    outputSchema?: never;
 } | {
     name: string;
     description: string;
@@ -425,5 +470,6 @@ export declare const TOOLS: ({
         };
         required: string[];
     };
+    outputSchema?: never;
 })[];
 //# sourceMappingURL=index.d.ts.map
